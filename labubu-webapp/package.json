@@ -2,6 +2,7 @@
   "name": "labubu-webapp",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.60.0",
     "@coinbase/cdp-sdk": "^1.35.0",

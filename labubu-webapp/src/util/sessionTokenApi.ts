@@ -1,7 +1,6 @@
 /**
  * Session Token API utilities for secure initialization
  */
-import { generateJwt } from '@coinbase/cdp-sdk/auth';
 
 interface SessionTokenRequest {
   addresses: Array<{
@@ -17,35 +16,6 @@ interface SessionTokenResponse {
 }
 
 /**
- * Generates a JWT token for CDP API authentication using the CDP SDK
- * @param keyName - The CDP API key name
- * @param keySecret - The CDP API private key
- * @returns Promise of signed JWT token
- */
-export async function generateJWT(keyName: string, keySecret: string): Promise<string> {
-  const requestMethod = 'POST';
-  const requestHost = 'api.developer.coinbase.com';
-  const requestPath = '/onramp/v1/token';
-  
-  try {
-    // Use the CDP SDK to generate the JWT
-    const token = await generateJwt({
-      apiKeyId: keyName,
-      apiKeySecret: keySecret,
-      requestMethod: requestMethod,
-      requestHost: requestHost,
-      requestPath: requestPath,
-      expiresIn: 120 // optional (defaults to 120 seconds)
-    });
-    
-    return token;
-  } catch (error) {
-    console.error('Error generating JWT:', error);
-    throw error;
-  }
-}
-
-/**
  * Generates a session token for secure onramp/offramp initialization
  * @param params - The parameters for session token generation
  * @returns The session token or null if generation fails
@@ -54,7 +24,7 @@ export async function generateSessionToken(
   params: SessionTokenRequest
 ): Promise<string | null> {
   try {
-    const response = await fetch('/api/session', {
+    const response = await fetch('http://localhost:3001/api/session', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

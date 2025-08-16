@@ -2,6 +2,7 @@ import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { getOnrampBuyUrl } from '@coinbase/onchainkit/fund';
+import { generateSessionToken, formatAddressesForToken } from './util/sessionTokenApi';
 
 function LabubuModel() {
   const { scene } = useGLTF('/model.glb');
@@ -31,15 +32,25 @@ function App() {
     try {
       const projectId = '615b11a0-4015-46f1-b809-4f3cafc9e32a';
       
+      // const userAddress = '0x1234567890123456789012345678901234567890';
+      // const networks = ['ethereum', 'base'];
+      
+      // const sessionToken = await generateSessionToken({
+      //   addresses: formatAddressesForToken(userAddress, networks),
+      //   assets: ['USDC', 'ETH']
+      // });
+
+      // console.log('sessionToken', sessionToken);
+
       const baseUrl = getOnrampBuyUrl({
         projectId,
         addresses: { '0x1': ['ethereum'] },
         assets: ['USDC'],
         presetFiatAmount: 20,
         fiatCurrency: 'USD',
-        // redirectUrl: 'https://yourapp.com/onramp-return?param=foo',
       });
-      const onrampBuyUrl = `${baseUrl}&sessionToken=MWYwN2FkYzItODQ4Yi02OTIxLThhNDItOGVkYzg2ZDAyOGM3`;
+      const sessionToken = "MWYwN2FmMDctMDhiOS02YmJhLTk5MDQtMWEzYmNkOTZiNjZm";
+      const onrampBuyUrl = `${baseUrl}&sessionToken=${sessionToken}`;
       window.open(onrampBuyUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
     } catch (error) {
       console.error('Error opening Coinbase Pay:', error);
