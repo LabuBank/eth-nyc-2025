@@ -26,3 +26,6 @@ yarn-error.log*
 /glb
 
 cdp_api_key.json
+
+/.claude
+/.claude-labubu
