@@ -24,3 +24,5 @@ yarn-debug.log*
 yarn-error.log*
 
 /glb
+
+cdp_api_key.json

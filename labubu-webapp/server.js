@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const Anthropic = require('@anthropic-ai/sdk');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
@@ -72,6 +73,67 @@ app.post('/api/chat', async (req, res) => {
     console.error('Error calling Claude API:', error);
     res.status(500).json({ 
       error: 'Sorry, I\'m having trouble thinking right now. Try again in a moment!' 
+    });
+  }
+});
+
+// Add this new endpoint for generating session tokens
+app.post('/api/generate-session-token', async (req, res) => {
+  try {
+    // Check if CDP API key is configured
+    if (!process.env.CDP_SECRET_API_KEY) {
+      return res.status(500).json({ 
+        error: 'CDP Secret API Key not configured. Add CDP_SECRET_API_KEY to your .env file.' 
+      });
+    }
+
+    // Generate JWT for CDP authentication
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      iss: process.env.CDP_SECRET_API_KEY,
+      sub: process.env.CDP_SECRET_API_KEY,
+      aud: 'https://api.developer.coinbase.com',
+      iat: now,
+      exp: now + 60, // 1 minute expiration
+    };
+
+    const jwtToken = jwt.sign(payload, process.env.CDP_SECRET_API_KEY, { algorithm: 'HS256' });
+
+    // Generate session token using CDP API
+    const sessionTokenResponse = await fetch('https://api.developer.coinbase.com/onramp/v1/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${jwtToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        addresses: [
+          {
+            address: req.body.walletAddress || "0x4315d134aCd3221a02dD380ADE3aF39Ce219037c", // Default or user-provided address
+            blockchains: ["ethereum", "base"]
+          }
+        ],
+        assets: ["ETH", "USDC"]
+      })
+    });
+
+    if (!sessionTokenResponse.ok) {
+      const errorData = await sessionTokenResponse.text();
+      console.error('CDP API Error:', errorData);
+      throw new Error(`Failed to generate session token: ${sessionTokenResponse.status}`);
+    }
+
+    const sessionData = await sessionTokenResponse.json();
+    
+    res.json({ 
+      sessionToken: sessionData.token,
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('Error generating session token:', error);
+    res.status(500).json({ 
+      error: 'Failed to generate session token. Please try again.' 
     });
   }
 });

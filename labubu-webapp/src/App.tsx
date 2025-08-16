@@ -1,6 +1,7 @@
 import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
+import { getOnrampBuyUrl } from '@coinbase/onchainkit/fund';
 
 function LabubuModel() {
   const { scene } = useGLTF('/model.glb');
@@ -25,11 +26,25 @@ function App() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
-  const handleBuyCrypto = () => {
-    // Open Coinbase Pay in a new window
-    const coinbasePayUrl = "https://pay.coinbase.com/buy/select-asset?appId=721d2603-af47-418d-b966-7eb96a490df5&destinationCurrency=USDC&destinationNetwork=ethereum";
-    window.open(coinbasePayUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
+
+  const handleBuyCrypto = async () => {
+    try {
+      const projectId = '615b11a0-4015-46f1-b809-4f3cafc9e32a';
+      
+      const baseUrl = getOnrampBuyUrl({
+        projectId,
+        addresses: { '0x1': ['ethereum'] },
+        assets: ['USDC'],
+        presetFiatAmount: 20,
+        fiatCurrency: 'USD',
+        // redirectUrl: 'https://yourapp.com/onramp-return?param=foo',
+      });
+      const onrampBuyUrl = `${baseUrl}&sessionToken=MWYwN2FkYzItODQ4Yi02OTIxLThhNDItOGVkYzg2ZDAyOGM3`;
+      window.open(onrampBuyUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
+    } catch (error) {
+      console.error('Error opening Coinbase Pay:', error);
+      alert('Failed to open Coinbase Pay. Please try again.');
+    }
   };
 
   const sendMessage = async () => {
@@ -117,8 +132,8 @@ function App() {
           <Suspense fallback={null}>
             <LabubuModel />
           </Suspense>
-          <OrbitControls 
-            enableZoom={false} 
+          <OrbitControls
+            enableZoom={false}
             enablePan={false}
             autoRotate={true}
             autoRotateSpeed={2}
@@ -141,7 +156,7 @@ function App() {
           <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '16px' }}>
             Chat with Labubu
           </h3>
-          
+
           {/* Messages Container */}
           <div style={{
             flex: 1,
@@ -236,7 +251,7 @@ function App() {
           <p style={{ color: '#6b7280', marginBottom: '24px', lineHeight: '1.6' }}>
             Tap your Labubu plushie to start your crypto journey. Your digital companion will guide you through the world of cryptocurrency.
           </p>
-          
+
           <div style={{ width: '100%' }}>
             <button
               onClick={handleBuyCrypto}
@@ -258,9 +273,9 @@ function App() {
             >
               💳 Buy USDC with Debit Card
             </button>
-            
-            <div style={{ 
-              marginTop: '12px', 
+
+            <div style={{
+              marginTop: '12px',
               padding: '12px',
               backgroundColor: '#f8f9fa',
               borderRadius: '8px',
