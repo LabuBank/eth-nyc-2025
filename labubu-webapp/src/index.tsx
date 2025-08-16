@@ -3,16 +3,13 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { OnchainProviders } from './providers/OnchainProviders';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <OnchainProviders>
-      <App />
-    </OnchainProviders>
+    <App />
   </React.StrictMode>
 );
 

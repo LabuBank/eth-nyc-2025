@@ -1,8 +1,6 @@
 import React, { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
-import { FundButton } from '@coinbase/onchainkit/fund';
-import { useAccount } from 'wagmi';
 
 function LabubuModel() {
   const { scene } = useGLTF('/model.glb');
@@ -17,7 +15,6 @@ interface Message {
 }
 
 function App() {
-  const { address, isConnected } = useAccount();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -28,6 +25,12 @@ function App() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const handleBuyCrypto = () => {
+    // Open Coinbase Pay in a new window
+    const coinbasePayUrl = "https://pay.coinbase.com/buy/select-asset?appId=721d2603-af47-418d-b966-7eb96a490df5&destinationCurrency=USDC&destinationNetwork=ethereum";
+    window.open(coinbasePayUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
+  };
 
   const sendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -235,10 +238,8 @@ function App() {
           </p>
           
           <div style={{ width: '100%' }}>
-            <FundButton
-              fundingUrl="https://pay.coinbase.com/buy/select-asset"
-              hideText={true}
-              text="Buy Crypto with Card"
+            <button
+              onClick={handleBuyCrypto}
               style={{
                 width: '100%',
                 background: 'linear-gradient(135deg, #a855f7, #ec4899)',
@@ -251,9 +252,12 @@ function App() {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                gap: '8px'
               }}
-            />
+            >
+              💳 Buy USDC with Debit Card
+            </button>
             
             <div style={{ 
               marginTop: '12px', 
@@ -263,11 +267,7 @@ function App() {
               fontSize: '14px',
               color: '#6b7280'
             }}>
-              {isConnected ? (
-                <span>✅ Wallet connected: {address?.slice(0, 6)}...{address?.slice(-4)}</span>
-              ) : (
-                <span>💡 Tap the button above to buy USDC with your debit card</span>
-              )}
+              <span>💡 Click above to buy USDC on Ethereum with your debit card via Coinbase Pay</span>
             </div>
           </div>
         </div>
