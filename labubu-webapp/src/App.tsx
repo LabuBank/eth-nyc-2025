@@ -32,24 +32,37 @@ function App() {
     try {
       const projectId = '615b11a0-4015-46f1-b809-4f3cafc9e32a';
       
-      // const userAddress = '0x1234567890123456789012345678901234567890';
-      // const networks = ['ethereum', 'base'];
+      // TODO: Replace with actual user's wallet address when wallet connection is implemented
+      const userPublicAddress = '0x94544835Cf97c631f101c5f538787fE14E2E04f6';
       
-      // const sessionToken = await generateSessionToken({
-      //   addresses: formatAddressesForToken(userAddress, networks),
-      //   assets: ['USDC', 'ETH']
-      // });
+      // Get the deposit address for this user
+      console.log('Fetching deposit address for user:', userPublicAddress);
+      const depositResponse = await fetch('http://localhost:3001/api/create-deposit-address', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userPublicAddress }),
+      });
 
-      // console.log('sessionToken', sessionToken);
+      if (!depositResponse.ok) {
+        throw new Error(`Failed to get deposit address: ${depositResponse.status}`);
+      }
+
+      const depositData = await depositResponse.json();
+      console.log('Deposit address data:', depositData);
+      const depositAddress = depositData.depositAddress;
+
+      console.log('depositAddress is', depositAddress);
 
       const baseUrl = getOnrampBuyUrl({
         projectId,
-        addresses: { '0x1': ['ethereum'] },
+        addresses: { [depositAddress]: ['ethereum'] },
         assets: ['USDC'],
         presetFiatAmount: 20,
         fiatCurrency: 'USD',
       });
-      const sessionToken = "MWYwN2FmMDctMDhiOS02YmJhLTk5MDQtMWEzYmNkOTZiNjZm";
+      const sessionToken = "MWYwN2FmODAtYzY5OC02YmVhLTg4NDktN2U0NjdmMjlkZDQx";
       const onrampBuyUrl = `${baseUrl}&sessionToken=${sessionToken}`;
       window.open(onrampBuyUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
     } catch (error) {

@@ -223,6 +223,47 @@ app.post('/api/session', async (req, res) => {
   }
 });
 
+// Endpoint to create/get deposit address
+app.post('/api/create-deposit-address', async (req, res) => {
+  try {
+    const { userPublicAddress } = req.body;
+
+    if (!userPublicAddress) {
+      return res.status(400).json({ error: 'userPublicAddress is required' });
+    }
+
+    console.log('Creating deposit address for user:', userPublicAddress);
+
+    // Call the external API
+    const response = await fetch('http://45.55.38.82/api/create-deposit-address', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userPublicAddress }),
+    });
+
+    if (!response.ok) {
+      console.error('External API error:', response.status, response.statusText);
+      return res.status(response.status).json({
+        error: `Failed to create deposit address: ${response.status} ${response.statusText}`,
+      });
+    }
+
+    const data = await response.json();
+    console.log('Deposit address response:', data);
+
+    // Return the deposit address data
+    res.json(data);
+  } catch (error) {
+    console.error('Error creating deposit address:', error);
+    res.status(500).json({
+      error: 'Failed to create deposit address',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
 app.listen(port, () => {
   console.log(`🚀 Labubu backend server running on http://localhost:${port}`);
   console.log('🔍 Debug - API Key exists:', !!process.env.CLAUDE_API_KEY);
