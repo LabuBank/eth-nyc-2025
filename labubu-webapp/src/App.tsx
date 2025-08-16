@@ -87,15 +87,15 @@ function App() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #a855f7, #ec4899, #ef4444)',
-      color: 'white'
+      background: 'linear-gradient(135deg, #91BFDF, #E3D3E4, #E3C2D6, #E2B5BB)',
+      color: '#B38079'
     }}>
       {/* Header */}
       <header style={{ padding: '16px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '8px', color: '#B38079' }}>
           Labubu Crypto
         </h1>
-        <p style={{ fontSize: '1.2rem', opacity: 0.9 }}>
+        <p style={{ fontSize: '1.2rem', opacity: 0.8, color: '#B38079' }}>
           Your friendly crypto companion
         </p>
       </header>
@@ -104,10 +104,10 @@ function App() {
       <div style={{
         height: '400px',
         margin: '0 16px 32px',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'rgba(227, 211, 228, 0.3)',
         borderRadius: '24px',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)'
+        border: '1px solid rgba(227, 194, 214, 0.4)'
       }}>
         <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
           <ambientLight intensity={1.2} />
@@ -129,11 +129,11 @@ function App() {
       {/* Chat Section */}
       <div style={{ padding: '0 16px 16px' }}>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'rgba(227, 211, 228, 0.9)',
           borderRadius: '16px',
           padding: '20px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          color: '#1f2937',
+          boxShadow: '0 10px 30px rgba(179, 128, 121, 0.15)',
+          color: '#B38079',
           maxHeight: '300px',
           display: 'flex',
           flexDirection: 'column'
@@ -159,8 +159,8 @@ function App() {
                   maxWidth: '80%',
                   padding: '10px 14px',
                   borderRadius: '18px',
-                  backgroundColor: message.sender === 'user' ? '#a855f7' : '#f3f4f6',
-                  color: message.sender === 'user' ? 'white' : '#1f2937',
+                  backgroundColor: message.sender === 'user' ? '#91BFDF' : 'rgba(227, 194, 214, 0.8)',
+                  color: message.sender === 'user' ? 'white' : '#B38079',
                   fontSize: '14px',
                   lineHeight: '1.4'
                 }}>
@@ -173,8 +173,8 @@ function App() {
                 <div style={{
                   padding: '10px 14px',
                   borderRadius: '18px',
-                  backgroundColor: '#f3f4f6',
-                  color: '#6b7280',
+                  backgroundColor: 'rgba(227, 194, 214, 0.6)',
+                  color: '#B38079',
                   fontSize: '14px'
                 }}>
                   Labubu is thinking...
@@ -195,9 +195,10 @@ function App() {
                 flex: 1,
                 padding: '12px 16px',
                 borderRadius: '24px',
-                border: '2px solid #e5e7eb',
+                border: '2px solid rgba(227, 194, 214, 0.5)',
                 fontSize: '14px',
-                outline: 'none'
+                outline: 'none',
+                backgroundColor: 'rgba(255, 255, 255, 0.8)'
               }}
             />
             <button
@@ -206,7 +207,7 @@ function App() {
               style={{
                 padding: '12px 20px',
                 borderRadius: '24px',
-                backgroundColor: '#a855f7',
+                backgroundColor: '#91BFDF',
                 color: 'white',
                 border: 'none',
                 cursor: 'pointer',
@@ -224,16 +225,16 @@ function App() {
       {/* Bottom Section */}
       <div style={{ padding: '0 24px 32px' }}>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'rgba(227, 211, 228, 0.95)',
           borderRadius: '16px',
           padding: '24px',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          color: '#1f2937'
+          boxShadow: '0 10px 30px rgba(179, 128, 121, 0.15)',
+          color: '#B38079'
         }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '16px' }}>
             Welcome to Crypto!
           </h2>
-          <p style={{ color: '#6b7280', marginBottom: '24px', lineHeight: '1.6' }}>
+          <p style={{ color: 'rgba(179, 128, 121, 0.8)', marginBottom: '24px', lineHeight: '1.6' }}>
             Tap your Labubu plushie to start your crypto journey. Your digital companion will guide you through the world of cryptocurrency.
           </p>
           
@@ -242,7 +243,7 @@ function App() {
               onClick={handleBuyCrypto}
               style={{
                 width: '100%',
-                background: 'linear-gradient(135deg, #a855f7, #ec4899)',
+                background: 'linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)',
                 color: 'white',
                 fontWeight: 'bold',
                 padding: '16px 24px',
@@ -253,7 +254,8 @@ function App() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(179, 128, 121, 0.3)'
               }}
             >
               💳 Buy USDC with Debit Card
@@ -262,10 +264,10 @@ function App() {
             <div style={{ 
               marginTop: '12px', 
               padding: '12px',
-              backgroundColor: '#f8f9fa',
+              backgroundColor: 'rgba(227, 194, 214, 0.4)',
               borderRadius: '8px',
               fontSize: '14px',
-              color: '#6b7280'
+              color: 'rgba(179, 128, 121, 0.9)'
             }}>
               <span>💡 Click above to buy USDC on Ethereum with your debit card via Coinbase Pay</span>
             </div>
