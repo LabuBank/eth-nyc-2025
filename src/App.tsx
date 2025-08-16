@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { getOnrampBuyUrl } from '@coinbase/onchainkit/fund';
@@ -27,6 +27,17 @@ function App() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [labubuAddress, setLabubuAddress] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Extract Ethereum address from URL path
+    const path = window.location.pathname;
+    const addressMatch = path.match(/\/(0x[a-fA-F0-9]{40})/);
+    
+    if (addressMatch) {
+      setLabubuAddress(addressMatch[1]);
+    }
+  }, []);
 
   const handleBuyCrypto = async () => {
     try {
@@ -125,6 +136,55 @@ function App() {
           Your friendly crypto companion
         </p>
       </header>
+
+      {/* Labubu Address Display */}
+      {labubuAddress && (
+        <div style={{
+          margin: '0 16px 16px',
+          backgroundColor: 'rgba(145, 191, 223, 0.9)',
+          borderRadius: '16px',
+          padding: '16px',
+          boxShadow: '0 8px 25px rgba(179, 128, 121, 0.15)',
+          border: '2px solid rgba(227, 194, 214, 0.3)'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ 
+              fontSize: '1.5rem',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+            }}>
+              🧸
+            </span>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                fontWeight: 'bold', 
+                color: 'white',
+                margin: '0 0 4px 0'
+              }}>
+                Your Labubu's Ethereum Address
+              </p>
+              <p style={{ 
+                fontSize: '16px', 
+                fontFamily: 'monospace',
+                color: 'white',
+                margin: 0,
+                wordBreak: 'break-all',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                backdropFilter: 'blur(5px)'
+              }}>
+                {labubuAddress}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3D Model Container */}
       <div style={{
