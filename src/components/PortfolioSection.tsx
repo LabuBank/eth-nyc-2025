@@ -4,7 +4,9 @@ import { mainnet } from "viem/chains";
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"),
+  transport: http(
+    "https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"
+  ),
 });
 
 const erc20Abi = parseAbi([
@@ -26,7 +28,9 @@ interface TokenBalance {
   error: string | null;
 }
 
-export default function PortfolioSection({ walletAddress }: PortfolioSectionProps) {
+export default function PortfolioSection({
+  walletAddress,
+}: PortfolioSectionProps) {
   const [tokenBalance, setTokenBalance] = useState<TokenBalance>({
     balance: "0",
     symbol: "pyUSD",
@@ -35,7 +39,7 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
   });
 
   const fetchTokenBalance = async (address: string) => {
-    setTokenBalance(prev => ({ ...prev, isLoading: true, error: null }));
+    setTokenBalance((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
       const [balance, decimals, symbol] = await Promise.all([
@@ -57,7 +61,9 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
         }),
       ]);
 
-      const formattedBalance = (Number(balance) / Math.pow(10, decimals)).toFixed(2);
+      const formattedBalance = (
+        Number(balance) / Math.pow(10, decimals)
+      ).toFixed(2);
 
       setTokenBalance({
         balance: formattedBalance,
@@ -67,7 +73,7 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
       });
     } catch (error) {
       console.error("Error fetching token balance:", error);
-      setTokenBalance(prev => ({
+      setTokenBalance((prev) => ({
         ...prev,
         isLoading: false,
         error: "Failed to fetch balance",
@@ -96,6 +102,7 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
         border: "2px solid rgba(145, 191, 223, 0.3)",
       }}
     >
+      {/* Portfolio Balance Section */}
       <div
         style={{
           display: "flex",
@@ -126,6 +133,7 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
           borderRadius: "12px",
           padding: "16px",
           backdropFilter: "blur(10px)",
+          marginBottom: "16px",
         }}
       >
         <div
@@ -155,7 +163,9 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
               }}
             >
               {tokenBalance.isLoading ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span
+                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                >
                   <span style={{ fontSize: "16px" }}>⏳</span>
                   Loading...
                 </span>
@@ -181,6 +191,61 @@ export default function PortfolioSection({ walletAddress }: PortfolioSectionProp
             }}
           >
             {PYUSD_CONTRACT.substring(0, 6)}...{PYUSD_CONTRACT.substring(38)}
+          </div>
+        </div>
+      </div>
+
+      {/* LabuBank's Ethereum Address Section */}
+      <div
+        style={{
+          backgroundColor: "rgba(145, 191, 223, 0.9)",
+          borderRadius: "12px",
+          padding: "16px",
+          border: "2px solid rgba(227, 194, 214, 0.3)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+          }}
+        >
+          <span
+            style={{
+              fontSize: "1.5rem",
+              filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+            }}
+          >
+            🧸
+          </span>
+          <div style={{ textAlign: "center" }}>
+            <p
+              style={{
+                fontSize: "14px",
+                fontWeight: "bold",
+                color: "white",
+                margin: "0 0 4px 0",
+              }}
+            >
+              Your LabuBank's Address
+            </p>
+            <p
+              style={{
+                fontSize: "16px",
+                fontFamily: "monospace",
+                color: "white",
+                margin: 0,
+                wordBreak: "break-all",
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                padding: "8px 12px",
+                borderRadius: "8px",
+                backdropFilter: "blur(5px)",
+              }}
+            >
+              {walletAddress}
+            </p>
           </div>
         </div>
       </div>

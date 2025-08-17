@@ -582,65 +582,6 @@ function App() {
       {/* Portfolio Section */}
       <PortfolioSection walletAddress={labubankAddress} />
 
-      {/* labubank Address Display */}
-      {labubankAddress && (
-        <div
-          style={{
-            margin: "0 16px 16px",
-            backgroundColor: "rgba(145, 191, 223, 0.9)",
-            borderRadius: "16px",
-            padding: "16px",
-            boxShadow: "0 8px 25px rgba(179, 128, 121, 0.15)",
-            border: "2px solid rgba(227, 194, 214, 0.3)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "12px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "1.5rem",
-                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-              }}
-            >
-              🧸
-            </span>
-            <div style={{ textAlign: "center" }}>
-              <p
-                style={{
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  color: "white",
-                  margin: "0 0 4px 0",
-                }}
-              >
-                Your labubank's Ethereum Address
-              </p>
-              <p
-                style={{
-                  fontSize: "16px",
-                  fontFamily: "monospace",
-                  color: "white",
-                  margin: 0,
-                  wordBreak: "break-all",
-                  backgroundColor: "rgba(255, 255, 255, 0.2)",
-                  padding: "8px 12px",
-                  borderRadius: "8px",
-                  backdropFilter: "blur(5px)",
-                }}
-              >
-                {labubankAddress}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Portfolio Loading Indicator */}
       {isPortfolioLoading && (
         <div
