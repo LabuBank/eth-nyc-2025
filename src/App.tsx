@@ -3,10 +3,94 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { getOnrampBuyUrl } from '@coinbase/onchainkit/fund';
 import { generateSessionToken, formatAddressesForToken } from './util/sessionTokenApi';
+import { createPublicClient, http, encodeFunctionData, parseAbi } from 'viem';
+import { mainnet } from 'viem/chains';
 
 function LabubuModel() {
   const { scene } = useGLTF('/model.glb');
   return <primitive object={scene} scale={3} />;
+}
+
+const LABUBANK_NFT_CONTRACT = '0x26E427f68355d97d7FDEb999A07348194D298415';
+const SIGNATURE_API_BASE = 'http://192.168.107.116';
+
+const publicClient = createPublicClient({
+  chain: mainnet,
+  transport: http()
+});
+
+const nftAbi = parseAbi([
+  'function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)',
+  'function setMyLabuBankName(uint256 _tokenId, string memory _newName) external',
+  'function balanceOf(address owner) view returns (uint256)'
+]);
+
+async function getUserTokenId(userAddress: string): Promise<bigint | null> {
+  try {
+    const balance = await publicClient.readContract({
+      address: LABUBANK_NFT_CONTRACT,
+      abi: nftAbi,
+      functionName: 'balanceOf',
+      args: [userAddress as `0x${string}`]
+    });
+
+    if (balance === BigInt(0)) {
+      return null;
+    }
+
+    const tokenId = await publicClient.readContract({
+      address: LABUBANK_NFT_CONTRACT,
+      abi: nftAbi,
+      functionName: 'tokenOfOwnerByIndex',
+      args: [userAddress as `0x${string}`, BigInt(0)]
+    });
+
+    return tokenId;
+  } catch (error) {
+    console.error('Error getting user token ID:', error);
+    return null;
+  }
+}
+
+async function getUserNonce(userAddress: string): Promise<string> {
+  try {
+    const nonce = await publicClient.getTransactionCount({
+      address: userAddress as `0x${string}`
+    });
+    return nonce.toString();
+  } catch (error) {
+    console.error('Error getting user nonce:', error);
+    return '0';
+  }
+}
+
+async function getSignatureFromAPI(txData: any): Promise<any> {
+  try {
+    const response = await fetch(`${SIGNATURE_API_BASE}/sign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(txData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Signature API request failed: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error calling signature API:', error);
+    throw error;
+  }
+}
+
+function generateSetNameCalldata(tokenId: bigint, newName: string): string {
+  return encodeFunctionData({
+    abi: nftAbi,
+    functionName: 'setMyLabuBankName',
+    args: [tokenId, newName]
+  });
 }
 
 interface Message {
@@ -28,6 +112,9 @@ function App() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [labubuAddress, setLabubuAddress] = useState<string | null>(null);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [isNaming, setIsNaming] = useState(false);
 
   useEffect(() => {
     // Extract Ethereum address from URL path
@@ -119,6 +206,51 @@ function App() {
     }
 
     setIsLoading(false);
+  };
+
+  const handleNameLabubank = async () => {
+    if (!labubuAddress || !newName.trim()) return;
+    
+    setIsNaming(true);
+    
+    try {
+      const tokenId = await getUserTokenId(labubuAddress);
+      
+      if (tokenId === null) {
+        alert('No Labubank NFT found for this address');
+        return;
+      }
+
+      const calldata = generateSetNameCalldata(tokenId, newName);
+      const nonce = await getUserNonce(labubuAddress);
+
+      const txData = {
+        to: LABUBANK_NFT_CONTRACT,
+        value: "0",
+        data: calldata,
+        gasLimit: "100000",
+        gasPrice: "20000000000",
+        nonce: nonce
+      };
+
+      console.log('Requesting signature for transaction:', txData);
+      const signatureResponse = await getSignatureFromAPI(txData);
+      console.log('Received signature:', signatureResponse);
+
+      const txHash = await publicClient.sendRawTransaction({
+        serializedTransaction: signatureResponse.rawTransaction as `0x${string}`
+      });
+
+      alert(`Transaction sent! Hash: ${txHash}`);
+      setShowNameModal(false);
+      setNewName('');
+      
+    } catch (error) {
+      console.error('Error naming Labubank:', error);
+      alert(`Failed to name Labubank: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsNaming(false);
+    }
   };
 
   return (
@@ -347,6 +479,31 @@ function App() {
               💳 Buy USDC with Debit Card
             </button>
 
+            <button
+              onClick={() => setShowNameModal(true)}
+              disabled={!labubuAddress}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #E3C2D6, #91BFDF, #E2B5BB)',
+                color: 'white',
+                fontWeight: 'bold',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                fontSize: '1.1rem',
+                border: 'none',
+                cursor: labubuAddress ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(179, 128, 121, 0.3)',
+                marginTop: '12px',
+                opacity: labubuAddress ? 1 : 0.5
+              }}
+            >
+              🏷️ Name my Labubank
+            </button>
+
             <div style={{
               marginTop: '12px',
               padding: '12px',
@@ -360,6 +517,103 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Name Modal */}
+      {showNameModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+          }}>
+            <h3 style={{
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              color: '#B38079',
+              textAlign: 'center'
+            }}>
+              Name Your Labubank
+            </h3>
+            
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="Enter a name for your Labubank..."
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                border: '2px solid rgba(227, 194, 214, 0.5)',
+                fontSize: '16px',
+                outline: 'none',
+                marginBottom: '20px',
+                boxSizing: 'border-box'
+              }}
+              maxLength={50}
+            />
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => {
+                  setShowNameModal(false);
+                  setNewName('');
+                }}
+                disabled={isNaming}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  backgroundColor: '#f0f0f0',
+                  color: '#666',
+                  border: 'none',
+                  cursor: isNaming ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  opacity: isNaming ? 0.5 : 1
+                }}
+              >
+                Cancel
+              </button>
+              
+              <button
+                onClick={handleNameLabubank}
+                disabled={isNaming || !newName.trim()}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #91BFDF, #E3C2D6)',
+                  color: 'white',
+                  border: 'none',
+                  cursor: (isNaming || !newName.trim()) ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  opacity: (isNaming || !newName.trim()) ? 0.5 : 1
+                }}
+              >
+                {isNaming ? 'Naming...' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
