@@ -17,7 +17,9 @@ const SIGNATURE_API_BASE = "http://192.168.107.116";
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"),
+  transport: http(
+    "https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"
+  ),
 });
 
 const nftAbi = parseAbi([
@@ -102,7 +104,7 @@ function generateSetNameCalldata(tokenId: bigint, newName: string): string {
 async function getNFTName(userAddress: string): Promise<string | null> {
   try {
     const tokenId = await getUserTokenId(userAddress);
-    
+
     if (tokenId === null) {
       return null;
     }
@@ -122,17 +124,19 @@ async function getNFTName(userAddress: string): Promise<string | null> {
 }
 
 async function refreshNftNameWithRetry(
-  walletAddress: string, 
-  maxRetries: number, 
+  walletAddress: string,
+  maxRetries: number,
   currentNftName: string | null,
   setNftName: (name: string | null) => void
 ) {
   let attempts = 0;
-  
+
   const tryFetch = async () => {
     attempts++;
-    console.log(`Attempting to fetch NFT name (attempt ${attempts}/${maxRetries})`);
-    
+    console.log(
+      `Attempting to fetch NFT name (attempt ${attempts}/${maxRetries})`
+    );
+
     try {
       const name = await getNFTName(walletAddress);
       if (name && name !== currentNftName) {
@@ -210,6 +214,12 @@ function App() {
   
   // Step 3 onramp completion state
   const [isOnrampComplete, setIsOnrampComplete] = useState(false);
+
+  // Name modal state
+  const [showNameModal, setShowNameModal] = useState(false);
+
+  // Transaction hash state
+  const [transactionHash, setTransactionHash] = useState<string>("");
 
   // Portfolio cache
   const portfolioCache = new Map<string, CachedPortfolio>();
@@ -501,8 +511,9 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: currentInput,
-          wallet_address: labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
+          prompt: currentInput,
+          wallet_address:
+            labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
         }),
       });
 
@@ -572,12 +583,13 @@ function App() {
         serializedTransaction: signatureResponse.rawTransaction as `0x${string}`,
       });
 
+      setTransactionHash(txHash);
       setCompletedNftName(newName);
       setNewName("");
       if (labubankAddress) {
         setTimeout(() => {
           refreshNftNameWithRetry(labubankAddress, 5, nftName, setNftName);
-        }, 3000);
+        }, 3000); // Wait 3 seconds for transaction to be mined
       }
       
       // Show completion state instead of advancing directly
@@ -641,6 +653,7 @@ function App() {
         background: "linear-gradient(135deg, #91BFDF, #E3D3E4, #E3C2D6, #E2B5BB)",
         color: "#B38079",
         position: "relative",
+        paddingBottom: "120px", // Add padding for fixed chat bar
       }}
     >
       {/* Global CSS Animations */}
@@ -1688,7 +1701,8 @@ function App() {
           {isLoadingNftName ? (
             <div
               style={{
-                background: "linear-gradient(135deg, #E3C2D6 0%, #91BFDF 50%, #E2B5BB 100%)",
+                background:
+                  "linear-gradient(135deg, #E3C2D6 0%, #91BFDF 50%, #E2B5BB 100%)",
                 borderRadius: "20px",
                 padding: "16px 24px",
                 display: "inline-block",
@@ -1704,7 +1718,8 @@ function App() {
           ) : nftName ? (
             <div
               style={{
-                background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+                background:
+                  "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
                 borderRadius: "24px",
                 padding: "20px 32px",
                 display: "inline-block",
@@ -1786,7 +1801,7 @@ function App() {
               <div style={{ fontSize: "1rem", color: "white", marginBottom: "4px", fontWeight: "600" }}>
                 🎉 Meet Your LabuBank 🎉
               </div>
-              
+
               <div
                 style={{
                   fontSize: window.innerWidth < 768 ? "1.8rem" : "2.2rem",
@@ -1799,15 +1814,22 @@ function App() {
               >
                 "{nftName}"
               </div>
-              
-              <div style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.9)", marginTop: "4px" }}>
+
+              <div
+                style={{
+                  fontSize: "0.9rem",
+                  color: "rgba(255, 255, 255, 0.9)",
+                  marginTop: "4px",
+                }}
+              >
                 🧸 Your personalized companion! 🧸
               </div>
             </div>
           ) : (
             <div
               style={{
-                background: "linear-gradient(135deg, #E2B5BB 0%, #E3C2D6 50%, #91BFDF 100%)",
+                background:
+                  "linear-gradient(135deg, #E2B5BB 0%, #E3C2D6 50%, #91BFDF 100%)",
                 borderRadius: "20px",
                 padding: "16px 24px",
                 display: "inline-block",
@@ -1815,39 +1837,335 @@ function App() {
                 border: "2px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <span style={{ fontSize: "1.1rem", color: "white", fontWeight: "bold" }}>
-                🏷️ Your LabuBank needs a name! Use the onboarding flow above 🏷️
+              <span
+                style={{
+                  fontSize: "1.1rem",
+                  color: "white",
+                  fontWeight: "bold",
+                }}
+              >
+                🏷️ Your LabuBank needs a name! Click "Name my Labubank" below 🏷️
               </span>
             </div>
           )}
+
+          {/* CSS Animations */}
+          <style>
+            {`
+              @keyframes pulse {
+                0%, 100% {
+                  transform: scale(1);
+                  box-shadow: 0 12px 35px rgba(179, 128, 121, 0.3);
+                }
+                50% {
+                  transform: scale(1.02);
+                  box-shadow: 0 16px 45px rgba(179, 128, 121, 0.4);
+                }
+              }
+              
+              @keyframes sparkle {
+                0%, 100% {
+                  opacity: 0.7;
+                  transform: scale(1) rotate(0deg);
+                }
+                50% {
+                  opacity: 1;
+                  transform: scale(1.2) rotate(180deg);
+                }
+              }
+              
+              @keyframes messageSlideIn {
+                0% {
+                  opacity: 0;
+                  transform: translateX(20px) scale(0.9);
+                }
+                100% {
+                  opacity: 1;
+                  transform: translateX(0) scale(1);
+                }
+              }
+            `}
+          </style>
         </div>
       )}
 
-      {/* Chat Section - only visible when onboarding is complete */}
-      {!showOnboarding && (
-        <div style={{ padding: "0 16px 16px" }}>
+      {/* Chat Messages Overlay */}
+      <div style={{ position: "relative", pointerEvents: "none" }}>
+        {messages.map((message) => (
           <div
+            key={message.id}
             style={{
-              backgroundColor: "rgba(227, 211, 228, 0.9)",
-              borderRadius: "16px",
-              padding: "20px",
-              boxShadow: "0 10px 30px rgba(179, 128, 121, 0.15)",
-              color: "#B38079",
-              maxHeight: "400px",
-              display: "flex",
-              flexDirection: "column",
+              position: "absolute",
+              left: "60%",
+              top: message.sender === "user" ? "20%" : "30%",
+              maxWidth: "300px",
+              pointerEvents: "none",
+              zIndex: 10,
             }}
           >
-            <h3 className="labu-header-tertiary">Chat with your Labubank</h3>
-
-            {/* Messages Container */}
+            {message.sender === "ai" && (
+              <div
+                style={{
+                  padding: "16px 20px",
+                  borderRadius: "24px",
+                  background: "rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  color: "white",
+                  fontSize: "14px",
+                  lineHeight: "1.6",
+                  textAlign: "left",
+                  overflowWrap: "break-word",
+                  wordWrap: "break-word",
+                  whiteSpace: "pre-wrap",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                  animation: "messageSlideIn 0.5s ease-out",
+                }}
+              >
+                {message.text}
+              </div>
+            )}
+          </div>
+        ))}
+        {isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              left: "60%",
+              top: "40%",
+              maxWidth: "300px",
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          >
             <div
               style={{
-                flex: 1,
-                overflowY: "auto",
+                padding: "16px 20px",
+                borderRadius: "24px",
+                background: "rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                color: "white",
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                animation: "messageSlideIn 0.5s ease-out",
+              }}
+            >
+              <span style={{ fontSize: "16px" }}>⏳</span>
+              labubank is thinking...
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Chat Bar */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "20px 16px 40px",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(145, 191, 223, 0.1) 50%, rgba(145, 191, 223, 0.3) 100%)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          zIndex: 100,
+        }}
+      >
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Ask labubank about crypto..."
+            style={{
+              flex: 1,
+              padding: "16px 20px",
+              borderRadius: "28px",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              fontSize: "16px",
+              outline: "none",
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              color: "white",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !inputMessage.trim()}
+            style={{
+              padding: "16px 20px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #91BFDF, #E3C2D6)",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "18px",
+              fontWeight: "bold",
+              opacity: isLoading || !inputMessage.trim() ? 0.5 : 1,
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+              transition: "all 0.3s ease",
+              minWidth: "56px",
+              minHeight: "56px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading && inputMessage.trim()) {
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.boxShadow =
+                  "0 12px 40px rgba(0, 0, 0, 0.3)";
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.2)";
+            }}
+          >
+            {isLoading ? "⏳" : "💬"}
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom Section */}
+      <div style={{ padding: "0 24px 32px" }}>
+        <div
+          style={{
+            backgroundColor: "rgba(227, 211, 228, 0.95)",
+            borderRadius: "16px",
+            padding: "24px",
+            boxShadow: "0 10px 30px rgba(179, 128, 121, 0.15)",
+            color: "#B38079",
+          }}
+        >
+          <h2 className="labu-header-tertiary">Welcome to Crypto!</h2>
+          <p className="labu-text">
+            Tap your labubank plushie to start your crypto journey. Your digital
+            companion will guide you through the world of cryptocurrency.
+          </p>
+
+          <div style={{ width: "100%" }}>
+            <button
+              onClick={handleBuyCrypto}
+              style={{
+                width: "100%",
+                background:
+                  "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                color: "white",
+                fontWeight: "bold",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                fontSize: "1.1rem",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                boxShadow: "0 4px 15px rgba(179, 128, 121, 0.3)",
+              }}
+            >
+              💳 Buy USDC with Debit Card
+            </button>
+            <button
+              onClick={() => setShowNameModal(true)}
+              disabled={!labubankAddress}
+              style={{
+                width: "100%",
+                background:
+                  "linear-gradient(135deg, #E3C2D6, #91BFDF, #E2B5BB)",
+                color: "white",
+                fontWeight: "bold",
+                padding: "16px 24px",
+                borderRadius: "12px",
+                fontSize: "1.1rem",
+                border: "none",
+                cursor: labubankAddress ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                boxShadow: "0 4px 15px rgba(179, 128, 121, 0.3)",
+                marginTop: "12px",
+                opacity: labubankAddress ? 1 : 0.5,
+              }}
+            >
+              🏷️ Name my Labubank
+            </button>
+            <div
+              style={{
+                marginTop: "12px",
+                padding: "12px",
+                backgroundColor: "rgba(227, 194, 214, 0.4)",
+                borderRadius: "8px",
+                fontSize: "14px",
+                color: "rgba(179, 128, 121, 0.9)",
+              }}
+            >
+              <span className="labu-text">
+                💡 Click above to buy USDC on Ethereum with your debit card via
+                Coinbase Pay
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Name Modal */}
+      {showNameModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "white",
+              borderRadius: "16px",
+              padding: "24px",
+              maxWidth: "400px",
+              width: "100%",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)",
+            }}
+          >
+            <h3
+              style={{
+                fontSize: "1.5rem",
+                fontWeight: "bold",
                 marginBottom: "16px",
+                color: "#B38079",
+              }}
+            >
+              🏷️ Name your LabuBank
+            </h3>
+            <div
+              style={{
                 maxHeight: "280px",
                 padding: "8px 0",
+                overflowY: "auto",
+                marginBottom: "16px",
               }}
             >
               {messages.map((message) => (
@@ -1958,6 +2276,39 @@ function App() {
             <p className="labu-text">
               Tap your labubank plushie to start your crypto journey. Your digital companion will guide you through the world of cryptocurrency.
             </p>
+
+            {/* Transaction Link */}
+            {transactionHash && (
+              <a
+                href={`https://etherscan.io/tx/${transactionHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-block",
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                  color: "#B38079",
+                  padding: "12px 24px",
+                  borderRadius: "16px",
+                  textDecoration: "none",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  marginBottom: "24px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    "rgba(255, 255, 255, 0.9)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                🔗 View Your Transaction
+              </a>
+            )}
 
             <div style={{ width: "100%" }}>
               <button

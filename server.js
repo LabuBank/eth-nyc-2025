@@ -32,7 +32,7 @@ app.post("/api/chat", async (req, res) => {
         "🚀 Bitcoin is amazing! It's the first cryptocurrency and works like digital gold!",
         "✨ Ethereum is super cool - it's like a world computer that runs smart contracts!",
         "🔐 Crypto wallets are like digital piggy banks that keep your coins safe!",
-        "📱 Your labubank plushie has NFC magic - just tap it to connect!",
+        "📱 Your LabuBank plushie has NFC magic - just tap it to connect!",
         "🌟 DeFi lets you be your own bank - no traditional banks needed!",
         "💫 That's a great crypto question! I love helping you learn about digital currencies!",
       ];
@@ -84,107 +84,106 @@ app.post("/api/chat", async (req, res) => {
 });
 
 // Add this new endpoint after the existing /api/session endpoint
-app.post('/api/generate-onramp-token', async (req, res) => {
+app.post("/api/generate-onramp-token", async (req, res) => {
   try {
     const { depositAddress } = req.body;
 
     if (!depositAddress) {
-      return res.status(400).json({ error: 'depositAddress is required' });
+      return res.status(400).json({ error: "depositAddress is required" });
     }
 
-    console.log('Generating onramp token for deposit address:', depositAddress);
+    console.log("Generating onramp token for deposit address:", depositAddress);
 
     // Prepare the request data for the script
     const requestData = JSON.stringify({
-      addresses: [{ address: depositAddress, blockchains: ['ethereum'] }],
-      assets: ['USDC']
+      addresses: [{ address: depositAddress, blockchains: ["ethereum"] }],
+      assets: ["USDC"],
     });
 
     const keyData = {
-      "id": process.env.CDP_API_KEY_NAME,
-      "privateKey": process.env.CDP_API_KEY_PRIVATE_KEY
+      id: process.env.CDP_API_KEY_NAME,
+      privateKey: process.env.CDP_API_KEY_PRIVATE_KEY,
     };
 
     // Import fs to write the file
-    const fs = await import('fs');
-    
+    const fs = await import("fs");
+
     // Write the key data to a file in the current directory (replace if exists)
-    const keyFilePath = './cdp_api_key.json';
+    const keyFilePath = "./cdp_api_key.json";
     fs.writeFileSync(keyFilePath, JSON.stringify(keyData, null, 2));
 
     // Use child_process to execute the shell script
-    const { spawn } = await import('child_process');
+    const { spawn } = await import("child_process");
 
     return new Promise((resolve, reject) => {
-      const scriptPath = './src/script/get_onramp_token.sh';
-      
-      const child = spawn('bash', [scriptPath, keyFilePath], {
-        stdio: ['pipe', 'pipe', 'pipe']
+      const scriptPath = "./src/script/get_onramp_token.sh";
+
+      const child = spawn("bash", [scriptPath, keyFilePath], {
+        stdio: ["pipe", "pipe", "pipe"],
       });
 
       // Send the JSON data via stdin instead of command line argument
       child.stdin.write(requestData);
       child.stdin.end();
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
 
-      child.stdout.on('data', (data) => {
+      child.stdout.on("data", (data) => {
         stdout += data.toString();
       });
 
-      child.stderr.on('data', (data) => {
+      child.stderr.on("data", (data) => {
         stderr += data.toString();
       });
 
-      child.on('close', (code) => {
+      child.on("close", (code) => {
         if (code !== 0) {
-          console.error('Script execution failed:', stderr);
+          console.error("Script execution failed:", stderr);
           return res.status(500).json({
-            error: 'Failed to generate onramp token',
-            details: stderr
+            error: "Failed to generate onramp token",
+            details: stderr,
           });
         }
 
         try {
           // Extract JSON from the script output (skip status line)
-          const lines = stdout.trim().split('\n');
-          const jsonLine = lines.find(line => line.startsWith('{'));
-          
+          const lines = stdout.trim().split("\n");
+          const jsonLine = lines.find((line) => line.startsWith("{"));
+
           if (!jsonLine) {
-            throw new Error('No JSON found in output');
+            throw new Error("No JSON found in output");
           }
-          
+
           const result = JSON.parse(jsonLine);
-          console.log('Onramp token generated successfully');
-          
+          console.log("Onramp token generated successfully");
+
           res.json({
             token: result.token,
-            channelId: result.channelId || result.channel_id
+            channelId: result.channelId || result.channel_id,
           });
         } catch (parseError) {
-          console.error('Failed to parse script output:', stdout);
+          console.error("Failed to parse script output:", stdout);
           res.status(500).json({
-            error: 'Invalid response from onramp token script',
-            details: stdout
+            error: "Invalid response from onramp token script",
+            details: stdout,
           });
         }
       });
 
-      child.on('error', (error) => {
-        console.error('Script execution error:', error);
+      child.on("error", (error) => {
+        console.error("Script execution error:", error);
         res.status(500).json({
-          error: 'Failed to execute onramp token script',
-          details: error.message
+          error: "Failed to execute onramp token script",
+          details: error.message,
         });
       });
     });
-
   } catch (error) {
-    console.error('Error in generate-onramp-token endpoint:', error);
+    console.error("Error in generate-onramp-token endpoint:", error);
     res.status(500).json({
-      error: 'Failed to generate onramp token',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to generate onramp token",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
