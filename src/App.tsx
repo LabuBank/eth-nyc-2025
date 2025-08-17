@@ -5,6 +5,7 @@ import { getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 import PortfolioSection from "./components/PortfolioSection";
+import LiquidGlass from "liquid-glass-react";
 
 function LabubankModel() {
   const { scene } = useGLTF("/labubank.glb");
@@ -198,6 +199,12 @@ function App() {
   const [nftName, setNftName] = useState<string | null>(null);
   const [isLoadingNftName, setIsLoadingNftName] = useState(false);
 
+  // Add ref to track if we've already started fetching portfolio data
+  const hasStartedFetching = React.useRef(false);
+
+  // Add state for mobile detection
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
   // Portfolio cache - in a real app, you might want to use localStorage or a more robust caching solution
   const portfolioCache = new Map<string, CachedPortfolio>();
   const CACHE_TTL = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
@@ -238,26 +245,57 @@ function App() {
   };
 
   useEffect(() => {
+    console.log("🔄 useEffect triggered, checking for address...");
     // Extract Ethereum address from URL path
     const path = window.location.pathname;
     const addressMatch = path.match(/\/(0x[a-fA-F0-9]{40})/);
 
     if (addressMatch) {
       const address = addressMatch[1];
+      console.log("📍 Found address in URL:", address);
       setlabubankAddress(address);
       // Fetch portfolio data when address is available
       fetchPortfolioData(address);
       // Fetch NFT name when address is available
       fetchNftName(address);
+    } else {
+      console.log("❌ No address found in URL path:", path);
     }
   }, []);
 
+  // Add resize listener for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const fetchPortfolioData = async (walletAddress: string) => {
+    // Prevent multiple simultaneous requests using both state and ref
+    if (isPortfolioLoading || hasStartedFetching.current) {
+      console.log(
+        "📋 Portfolio request already in progress or started, skipping...",
+        {
+          isPortfolioLoading,
+          hasStartedFetching: hasStartedFetching.current,
+        }
+      );
+      return;
+    }
+
+    // Mark that we've started fetching
+    hasStartedFetching.current = true;
+    console.log("🚀 Starting portfolio fetch for:", walletAddress);
+
     // Check cache first
     const cachedData = getCachedPortfolio(walletAddress);
     if (cachedData) {
       console.log("📋 Using cached portfolio data for wallet:", walletAddress);
       setPortfolioData(cachedData);
+      hasStartedFetching.current = false; // Reset the flag
 
       // Set the initial message with cached portfolio summary
       if (cachedData.summary) {
@@ -343,6 +381,7 @@ function App() {
       setMessages([errorMessage]);
     } finally {
       setIsPortfolioLoading(false);
+      hasStartedFetching.current = false; // Reset the flag when done
     }
   };
 
@@ -856,6 +895,38 @@ function App() {
                   transform: translateX(0) scale(1);
                 }
               }
+              
+              /* Mobile-specific styles for liquid glass */
+              @media (max-width: 768px) {
+                .liquid-glass-container {
+                  touch-action: manipulation;
+                  -webkit-tap-highlight-color: transparent;
+                }
+                
+                /* Ensure text is readable on mobile */
+                .liquid-glass-text {
+                  font-size: 14px;
+                  line-height: 1.5;
+                  word-break: break-word;
+                }
+                
+                /* Optimize scrolling for long messages */
+                .liquid-glass-scroll {
+                  -webkit-overflow-scrolling: touch;
+                  scrollbar-width: thin;
+                }
+              }
+              
+              /* Touch-friendly interactions */
+              @media (hover: none) and (pointer: coarse) {
+                .liquid-glass-container {
+                  transition: transform 0.2s ease;
+                }
+                
+                .liquid-glass-container:active {
+                  transform: scale(0.98);
+                }
+              }
             `}
           </style>
         </div>
@@ -863,41 +934,53 @@ function App() {
 
       {/* Chat Messages Overlay */}
       <div style={{ position: "relative", pointerEvents: "none" }}>
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
             style={{
               position: "absolute",
-              left: "60%",
-              top: message.sender === "user" ? "20%" : "30%",
-              maxWidth: "300px",
+              left: isMobile ? "50%" : "60%", // Center on mobile
+              top: `${30 + index * 15}%`, // Stack messages vertically with spacing
+              maxWidth: isMobile ? "90vw" : "280px", // Responsive width
               pointerEvents: "none",
               zIndex: 10,
+              transform: isMobile ? "translateX(-50%)" : "none", // Center on mobile
             }}
           >
             {message.sender === "ai" && (
-              <div
+              <LiquidGlass
+                displacementScale={isMobile ? 24 : 32}
+                blurAmount={isMobile ? 0.06 : 0.08}
+                saturation={isMobile ? 110 : 120}
+                aberrationIntensity={isMobile ? 1.2 : 1.5}
+                elasticity={isMobile ? 0.2 : 0.25}
+                cornerRadius={isMobile ? 16 : 20}
+                padding={isMobile ? "12px 16px" : "16px 20px"}
+                className="liquid-glass-container"
                 style={{
-                  padding: "16px 20px",
-                  borderRadius: "24px",
-                  background: "rgba(255, 255, 255, 0.15)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  color: "white",
-                  fontSize: "14px",
-                  lineHeight: "1.6",
-                  textAlign: "left",
-                  overflowWrap: "break-word",
-                  wordWrap: "break-word",
-                  whiteSpace: "pre-wrap",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                  animation: "messageSlideIn 0.5s ease-out",
+                  maxWidth: isMobile ? "90vw" : "280px",
+                  width: "fit-content",
                 }}
               >
-                {message.text}
-              </div>
+                <div
+                  className="liquid-glass-text liquid-glass-scroll"
+                  style={{
+                    color: "white",
+                    fontSize: isMobile ? "13px" : "14px",
+                    lineHeight: "1.6",
+                    textAlign: "left",
+                    overflowWrap: "break-word",
+                    wordWrap: "break-word",
+                    whiteSpace: "pre-wrap",
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
+                    animation: "messageSlideIn 0.5s ease-out",
+                    maxHeight: isMobile ? "150px" : "200px", // Smaller height on mobile
+                    overflowY: "auto", // Scroll for very long messages
+                  }}
+                >
+                  {message.text}
+                </div>
+              </LiquidGlass>
             )}
           </div>
         ))}
@@ -905,34 +988,44 @@ function App() {
           <div
             style={{
               position: "absolute",
-              left: "60%",
-              top: "40%",
-              maxWidth: "300px",
+              left: isMobile ? "50%" : "60%",
+              top: `${30 + messages.length * 15}%`,
+              maxWidth: isMobile ? "90vw" : "280px",
               pointerEvents: "none",
               zIndex: 10,
+              transform: isMobile ? "translateX(-50%)" : "none",
             }}
           >
-            <div
+            <LiquidGlass
+              displacementScale={isMobile ? 24 : 32}
+              blurAmount={isMobile ? 0.06 : 0.08}
+              saturation={isMobile ? 110 : 120}
+              aberrationIntensity={isMobile ? 1.2 : 1.5}
+              elasticity={isMobile ? 0.2 : 0.25}
+              cornerRadius={isMobile ? 16 : 20}
+              padding={isMobile ? "12px 16px" : "16px 20px"}
+              className="liquid-glass-container"
               style={{
-                padding: "16px 20px",
-                borderRadius: "24px",
-                background: "rgba(255, 255, 255, 0.15)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                color: "white",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                animation: "messageSlideIn 0.5s ease-out",
+                maxWidth: isMobile ? "90vw" : "280px",
+                width: "fit-content",
               }}
             >
-              <span style={{ fontSize: "16px" }}>⏳</span>
-              labubank is thinking...
-            </div>
+              <div
+                className="liquid-glass-text"
+                style={{
+                  color: "white",
+                  fontSize: isMobile ? "13px" : "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.3)",
+                  animation: "messageSlideIn 0.5s ease-out",
+                }}
+              >
+                <span style={{ fontSize: "16px" }}>⏳</span>
+                labubank is thinking...
+              </div>
+            </LiquidGlass>
           </div>
         )}
       </div>
@@ -958,7 +1051,7 @@ function App() {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Ask labubank about crypto..."
+            placeholder="Ask LabuBank about crypto..."
             style={{
               flex: 1,
               padding: "16px 20px",
