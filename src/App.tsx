@@ -43,9 +43,9 @@ function App() {
     try {
       const projectId = '615b11a0-4015-46f1-b809-4f3cafc9e32a';
       
-      // TODO: Replace with actual user's wallet address when wallet connection is implemented
-      const userPublicAddress = '0x94544835Cf97c631f101c5f538787fE14E2E04f6';
-      
+      // Fallback to hardcoded address for testing
+      const userPublicAddress = labubuAddress || '0x94544835Cf97c631f101c5f538787fE14E2E04f6';
+
       // Get the deposit address for this user
       console.log('Fetching deposit address for user:', userPublicAddress);
       const depositResponse = await fetch('http://localhost:3001/api/create-deposit-address', {
