@@ -16,7 +16,9 @@ const SIGNATURE_API_BASE = "http://192.168.107.116";
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http("https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"),
+  transport: http(
+    "https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"
+  ),
 });
 
 const nftAbi = parseAbi([
@@ -97,7 +99,7 @@ function generateSetNameCalldata(tokenId: bigint, newName: string): string {
 async function getNFTName(userAddress: string): Promise<string | null> {
   try {
     const tokenId = await getUserTokenId(userAddress);
-    
+
     if (tokenId === null) {
       return null;
     }
@@ -117,17 +119,19 @@ async function getNFTName(userAddress: string): Promise<string | null> {
 }
 
 async function refreshNftNameWithRetry(
-  walletAddress: string, 
-  maxRetries: number, 
+  walletAddress: string,
+  maxRetries: number,
   currentNftName: string | null,
   setNftName: (name: string | null) => void
 ) {
   let attempts = 0;
-  
+
   const tryFetch = async () => {
     attempts++;
-    console.log(`Attempting to fetch NFT name (attempt ${attempts}/${maxRetries})`);
-    
+    console.log(
+      `Attempting to fetch NFT name (attempt ${attempts}/${maxRetries})`
+    );
+
     try {
       const name = await getNFTName(walletAddress);
       if (name && name !== currentNftName) {
@@ -445,7 +449,7 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          query: currentInput,
+          prompt: currentInput,
           wallet_address:
             labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
         }),
@@ -531,7 +535,7 @@ function App() {
       if (labubankAddress) {
         setTimeout(() => {
           refreshNftNameWithRetry(labubankAddress, 5, nftName, setNftName);
-        }, 3000); // Wait 3 seconds for transaction to be mined 
+        }, 3000); // Wait 3 seconds for transaction to be mined
       }
     } catch (error) {
       console.error("Error naming Labubank:", error);
@@ -689,7 +693,8 @@ function App() {
           {isLoadingNftName ? (
             <div
               style={{
-                background: "linear-gradient(135deg, #E3C2D6 0%, #91BFDF 50%, #E2B5BB 100%)",
+                background:
+                  "linear-gradient(135deg, #E3C2D6 0%, #91BFDF 50%, #E2B5BB 100%)",
                 borderRadius: "20px",
                 padding: "16px 24px",
                 display: "inline-block",
@@ -697,14 +702,21 @@ function App() {
                 border: "2px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <span style={{ fontSize: "1.2rem", color: "white", fontWeight: "bold" }}>
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  color: "white",
+                  fontWeight: "bold",
+                }}
+              >
                 ✨ Loading your LabuBank's name... ✨
               </span>
             </div>
           ) : nftName ? (
             <div
               style={{
-                background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+                background:
+                  "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
                 borderRadius: "24px",
                 padding: "20px 32px",
                 display: "inline-block",
@@ -749,11 +761,18 @@ function App() {
               >
                 ⭐
               </div>
-              
-              <div style={{ fontSize: "1rem", color: "white", marginBottom: "4px", fontWeight: "600" }}>
+
+              <div
+                style={{
+                  fontSize: "1rem",
+                  color: "white",
+                  marginBottom: "4px",
+                  fontWeight: "600",
+                }}
+              >
                 🎉 Meet Your LabuBank 🎉
               </div>
-              
+
               <div
                 style={{
                   fontSize: "2.2rem",
@@ -766,15 +785,22 @@ function App() {
               >
                 "{nftName}"
               </div>
-              
-              <div style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.9)", marginTop: "4px" }}>
+
+              <div
+                style={{
+                  fontSize: "0.9rem",
+                  color: "rgba(255, 255, 255, 0.9)",
+                  marginTop: "4px",
+                }}
+              >
                 🧸 Your personalized companion! 🧸
               </div>
             </div>
           ) : (
             <div
               style={{
-                background: "linear-gradient(135deg, #E2B5BB 0%, #E3C2D6 50%, #91BFDF 100%)",
+                background:
+                  "linear-gradient(135deg, #E2B5BB 0%, #E3C2D6 50%, #91BFDF 100%)",
                 borderRadius: "20px",
                 padding: "16px 24px",
                 display: "inline-block",
@@ -782,12 +808,18 @@ function App() {
                 border: "2px solid rgba(255, 255, 255, 0.3)",
               }}
             >
-              <span style={{ fontSize: "1.1rem", color: "white", fontWeight: "bold" }}>
+              <span
+                style={{
+                  fontSize: "1.1rem",
+                  color: "white",
+                  fontWeight: "bold",
+                }}
+              >
                 🏷️ Your LabuBank needs a name! Click "Name my Labubank" below 🏷️
               </span>
             </div>
           )}
-          
+
           {/* CSS Animations */}
           <style>
             {`
@@ -831,7 +863,7 @@ function App() {
             flexDirection: "column",
           }}
         >
-          <h3 className="labu-header-tertiary">Chat with your Labubank</h3>
+          <h3 className="labu-header-tertiary">Chat with your LabuBank</h3>
 
           {/* Messages Container */}
           <div
@@ -895,7 +927,7 @@ function App() {
                   }}
                 >
                   <span style={{ fontSize: "16px" }}>⏳</span>
-                  labubank is thinking...
+                  LabuBank is thinking...
                 </div>
               </div>
             )}
@@ -908,7 +940,7 @@ function App() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask labubank about crypto..."
+              placeholder="Ask LabuBank about crypto..."
               style={{
                 flex: 1,
                 padding: "12px 16px",
@@ -1150,7 +1182,8 @@ function App() {
         >
           <div
             style={{
-              background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+              background:
+                "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
               borderRadius: "24px",
               padding: "32px",
               maxWidth: "450px",
@@ -1247,7 +1280,8 @@ function App() {
                 e.currentTarget.style.transform = "translateY(-2px)";
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
+                e.currentTarget.style.backgroundColor =
+                  "rgba(255, 255, 255, 0.9)";
                 e.currentTarget.style.transform = "translateY(0)";
               }}
             >
@@ -1280,11 +1314,13 @@ function App() {
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.transform = "translateY(-3px)";
-                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.4)";
+                  e.currentTarget.style.boxShadow =
+                    "0 8px 25px rgba(0, 0, 0, 0.4)";
                 }}
                 onMouseOut={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                  e.currentTarget.style.boxShadow =
+                    "0 6px 20px rgba(0, 0, 0, 0.3)";
                 }}
               >
                 🎈 Have fun!
