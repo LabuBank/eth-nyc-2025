@@ -144,16 +144,35 @@ export default function PortfolioSection({
           }}
         >
           <div>
-            <p
+            <div
               style={{
-                fontSize: "14px",
-                color: "rgba(255, 255, 255, 0.8)",
-                margin: "0 0 4px 0",
-                fontWeight: "500",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "4px",
               }}
             >
-              {tokenBalance.symbol}
-            </p>
+              <img
+                src="/pyusd_logo.png"
+                alt="pyUSD Logo"
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                }}
+              />
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "rgba(255, 255, 255, 0.8)",
+                  margin: 0,
+                  fontWeight: "500",
+                }}
+              >
+                {tokenBalance.symbol}
+              </p>
+            </div>
             <p
               style={{
                 fontSize: "24px",

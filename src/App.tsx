@@ -566,7 +566,7 @@ function App() {
       <header style={{ padding: "16px", textAlign: "center" }}>
         <div style={{ marginBottom: "16px" }}>
           <img
-            src="/labuBankLogoCropped.jpg"
+            src="/labubank_transparent.png"
             alt="LabuBank Logo"
             style={{
               height: "80px",
@@ -576,7 +576,42 @@ function App() {
             }}
           />
         </div>
-        <p className="labu-header-secondary">Your friendly crypto companion</p>
+        <div
+          style={{
+            background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+            padding: "2px",
+            borderRadius: "20px",
+            margin: "8px 0 0 0",
+            display: "inline-block",
+            animation: "gradientShift 3s ease-in-out infinite",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "18px",
+              padding: "10px 20px",
+              textAlign: "center",
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "1.1rem",
+                fontWeight: "600",
+                color: "#B38079",
+                margin: 0,
+                background: "linear-gradient(135deg, #91BFDF, #E3C2D6)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                textShadow: "0 1px 2px rgba(179, 128, 121, 0.1)",
+              }}
+            >
+              ✨ Your friendly crypto companion ✨
+            </p>
+          </div>
+        </div>
       </header>
 
       {/* Portfolio Section */}
@@ -770,6 +805,21 @@ function App() {
                 100% {
                   opacity: 1;
                   transform: translateX(0) scale(1);
+                }
+              }
+
+              @keyframes gradientShift {
+                0%, 100% {
+                  background: linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB);
+                }
+                25% {
+                  background: linear-gradient(135deg, #E3C2D6, #E2B5BB, #91BFDF);
+                }
+                50% {
+                  background: linear-gradient(135deg, #E2B5BB, #91BFDF, #E3C2D6);
+                }
+                75% {
+                  background: linear-gradient(135deg, #91BFDF, #E2B5BB, #E3C2D6);
                 }
               }
             `}
@@ -1142,24 +1192,128 @@ function App() {
         </div>
       </div>
 
-      {/* Bottom Section */}
+      {/* LabuBank Welcome Section */}
       <div style={{ padding: "0 24px 32px" }}>
         <div
           style={{
-            backgroundColor: "rgba(227, 211, 228, 0.95)",
-            borderRadius: "16px",
-            padding: "24px",
-            boxShadow: "0 10px 30px rgba(179, 128, 121, 0.15)",
-            color: "#B38079",
+            position: "relative",
+            background:
+              "linear-gradient(135deg, rgba(227, 211, 228, 0.95), rgba(145, 191, 223, 0.9))",
+            borderRadius: "24px",
+            padding: "32px 24px",
+            boxShadow: "0 15px 40px rgba(179, 128, 121, 0.2)",
+            border: "2px solid rgba(227, 194, 214, 0.4)",
+            overflow: "hidden",
           }}
         >
-          <h2 className="labu-header-tertiary">Welcome to Crypto!</h2>
-          <p className="labu-text">
-            Tap your labubank plushie to start your crypto journey. Your digital
-            companion will guide you through the world of cryptocurrency.
-          </p>
+          {/* Decorative Background Elements */}
+          <div
+            style={{
+              position: "absolute",
+              top: "-20px",
+              right: "-20px",
+              width: "80px",
+              height: "80px",
+              background: "rgba(227, 194, 214, 0.3)",
+              borderRadius: "50%",
+              filter: "blur(15px)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: "-15px",
+              left: "-15px",
+              width: "60px",
+              height: "60px",
+              background: "rgba(145, 191, 223, 0.3)",
+              borderRadius: "50%",
+              filter: "blur(12px)",
+            }}
+          />
 
-          <div style={{ width: "100%" }}>
+          {/* Header Section */}
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: "28px",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "16px",
+                marginBottom: "16px",
+                padding: "16px 24px",
+                background: "rgba(255, 255, 255, 0.2)",
+                borderRadius: "24px",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.3)",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* Decorative accent line */}
+              <div
+                style={{
+                  width: "3px",
+                  height: "40px",
+                  background: "linear-gradient(180deg, #91BFDF, #E3C2D6)",
+                  borderRadius: "2px",
+                }}
+              />
+
+              <h2
+                style={{
+                  fontSize: "2rem",
+                  fontWeight: "700",
+                  color: "white",
+                  margin: 0,
+                  textShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+                  fontFamily:
+                    "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Welcome to Crypto!
+              </h2>
+
+              {/* Decorative accent line */}
+              <div
+                style={{
+                  width: "3px",
+                  height: "40px",
+                  background: "linear-gradient(180deg, #E3C2D6, #E2B5BB)",
+                  borderRadius: "2px",
+                }}
+              />
+            </div>
+            <p
+              style={{
+                fontSize: "1.15rem",
+                color: "rgba(255, 255, 255, 0.9)",
+                margin: 0,
+                lineHeight: "1.7",
+                textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                maxWidth: "600px",
+                marginLeft: "auto",
+                marginRight: "auto",
+                fontFamily:
+                  "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                fontWeight: "400",
+                letterSpacing: "0.01em",
+              }}
+            >
+              Your LabuBank companion is here to guide you through the exciting
+              world of cryptocurrency. Start your journey with confidence.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ width: "100%", position: "relative", zIndex: 1 }}>
             <button
               onClick={handleBuyCrypto}
               style={{
@@ -1168,20 +1322,52 @@ function App() {
                   "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
                 color: "white",
                 fontWeight: "bold",
-                padding: "16px 24px",
-                borderRadius: "12px",
-                fontSize: "1.1rem",
+                padding: "18px 24px",
+                borderRadius: "16px",
+                fontSize: "1.2rem",
                 border: "none",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "8px",
-                boxShadow: "0 4px 15px rgba(179, 128, 121, 0.3)",
+                gap: "12px",
+                boxShadow: "0 8px 25px rgba(179, 128, 121, 0.3)",
+                transition: "all 0.3s ease",
+                position: "relative",
+                overflow: "hidden",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow =
+                  "0 12px 35px rgba(179, 128, 121, 0.4)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 8px 25px rgba(179, 128, 121, 0.3)";
               }}
             >
-              💳 Buy USDC with Debit Card
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "600",
+                  opacity: "0.9",
+                }}
+              >
+                →
+              </span>
+              Buy USDC with Debit Card
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "600",
+                  opacity: "0.9",
+                }}
+              >
+                →
+              </span>
             </button>
+
             <button
               onClick={() => setShowNameModal(true)}
               disabled={!labubankAddress}
@@ -1191,36 +1377,119 @@ function App() {
                   "linear-gradient(135deg, #E3C2D6, #91BFDF, #E2B5BB)",
                 color: "white",
                 fontWeight: "bold",
-                padding: "16px 24px",
-                borderRadius: "12px",
-                fontSize: "1.1rem",
+                padding: "18px 24px",
+                borderRadius: "16px",
+                fontSize: "1.2rem",
                 border: "none",
                 cursor: labubankAddress ? "pointer" : "not-allowed",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: "8px",
-                boxShadow: "0 4px 15px rgba(179, 128, 121, 0.3)",
-                marginTop: "12px",
+                gap: "12px",
+                boxShadow: "0 8px 25px rgba(179, 128, 121, 0.3)",
+                marginTop: "16px",
                 opacity: labubankAddress ? 1 : 0.5,
+                transition: "all 0.3s ease",
+              }}
+              onMouseOver={(e) => {
+                if (labubankAddress) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 12px 35px rgba(179, 128, 121, 0.4)";
+                }
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 8px 25px rgba(179, 128, 121, 0.3)";
               }}
             >
-              🏷️ Name my Labubank
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "600",
+                  opacity: "0.9",
+                }}
+              >
+                ✦
+              </span>
+              Name my Labubank
+              <span
+                style={{
+                  fontSize: "1.2rem",
+                  fontWeight: "600",
+                  opacity: "0.9",
+                }}
+              >
+                ✦
+              </span>
             </button>
+
+            {/* Info Card */}
             <div
               style={{
-                marginTop: "12px",
-                padding: "12px",
-                backgroundColor: "rgba(227, 194, 214, 0.4)",
-                borderRadius: "8px",
-                fontSize: "14px",
-                color: "rgba(179, 128, 121, 0.9)",
+                marginTop: "20px",
+                padding: "16px 20px",
+                background: "rgba(255, 255, 255, 0.15)",
+                borderRadius: "16px",
+                backdropFilter: "blur(10px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                textAlign: "center",
               }}
             >
-              <span className="labu-text">
-                💡 Click above to buy USDC on Ethereum with your debit card via
-                Coinbase Pay
-              </span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  marginBottom: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "50%",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "15px",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    fontWeight: "600",
+                    fontFamily:
+                      "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  Quick Start Guide
+                </span>
+                <div
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: "rgba(255, 255, 255, 0.8)",
+                    borderRadius: "50%",
+                  }}
+                />
+              </div>
+              <p
+                style={{
+                  fontSize: "14px",
+                  color: "rgba(255, 255, 255, 0.8)",
+                  margin: 0,
+                  lineHeight: "1.6",
+                  fontFamily:
+                    "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  fontWeight: "400",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                Buy USDC on Ethereum with your debit card via Coinbase Pay, then
+                give your LabuBank a unique name to personalize your experience.
+              </p>
             </div>
           </div>
         </div>
