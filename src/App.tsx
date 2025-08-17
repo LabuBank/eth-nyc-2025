@@ -269,7 +269,7 @@ function App() {
       // Get the deposit address for this user
       console.log("Fetching deposit address for user:", userPublicAddress);
       const depositResponse = await fetch(
-        "http://45.55.38.82:3001/api/create-deposit-address",
+        "http://45.55.38.82/api/create-deposit-address",
         {
           method: "POST",
           headers: {
@@ -297,7 +297,7 @@ function App() {
         depositAddress
       );
       const tokenResponse = await fetch(
-        "http://45.55.38.82:3001/api/generate-onramp-token",
+        "http://45.55.38.82/api/generate-onramp-token",
         {
           method: "POST",
           headers: {
