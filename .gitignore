@@ -29,4 +29,4 @@ yarn-error.log*
 cdp_api_key.json
 
 /.claude
-/.claude-labubu
+/.claude

@@ -1,8 +1,8 @@
-import express from 'express';
-import cors from 'cors';
-import Anthropic from '@anthropic-ai/sdk';
-import { generateJwt } from '@coinbase/cdp-sdk/auth';
-import dotenv from 'dotenv';
+import express from "express";
+import cors from "cors";
+import Anthropic from "@anthropic-ai/sdk";
+import { generateJwt } from "@coinbase/cdp-sdk/auth";
+import dotenv from "dotenv";
 
 dotenv.config();
 
@@ -18,12 +18,12 @@ const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY,
 });
 
-app.post('/api/chat', async (req, res) => {
+app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
 
     if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+      return res.status(400).json({ error: "Message is required" });
     }
 
     if (!process.env.CLAUDE_API_KEY) {
@@ -32,49 +32,53 @@ app.post('/api/chat', async (req, res) => {
         "🚀 Bitcoin is amazing! It's the first cryptocurrency and works like digital gold!",
         "✨ Ethereum is super cool - it's like a world computer that runs smart contracts!",
         "🔐 Crypto wallets are like digital piggy banks that keep your coins safe!",
-        "📱 Your Labubu plushie has NFC magic - just tap it to connect!",
+        "📱 Your labubank plushie has NFC magic - just tap it to connect!",
         "🌟 DeFi lets you be your own bank - no traditional banks needed!",
-        "💫 That's a great crypto question! I love helping you learn about digital currencies!"
+        "💫 That's a great crypto question! I love helping you learn about digital currencies!",
       ];
-      
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-      
+
+      const randomResponse =
+        mockResponses[Math.floor(Math.random() * mockResponses.length)];
+
       // Add some delay to simulate real API
-      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-      
-      return res.json({ 
-        response: randomResponse + " (Demo mode - add CLAUDE_API_KEY to .env for real AI!)"
+      await new Promise((resolve) =>
+        setTimeout(resolve, 800 + Math.random() * 1200)
+      );
+
+      return res.json({
+        response:
+          randomResponse +
+          " (Demo mode - add CLAUDE_API_KEY to .env for real AI!)",
       });
     }
 
-
-    console.log('calling anthropic');
+    console.log("calling anthropic");
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: "claude-sonnet-4-20250514",
       max_tokens: 150,
       messages: [
         {
-          role: 'user',
-          content: `You are Labubu, a cute and friendly crypto companion helping users learn about cryptocurrency in a fun, approachable way. You live inside a physical plushie that has an NFC chip and hardware wallet. Keep your responses:
+          role: "user",
+          content: `You are labubank, a cute and friendly crypto companion helping users learn about cryptocurrency in a fun, approachable way. You live inside a physical plushie that has an NFC chip and hardware wallet. Keep your responses:
           - Short and sweet (1-2 sentences max)
           - Use emojis to be cute and friendly
           - Focus on crypto education
-          - Mention the physical Labubu plushie when relevant
+          - Mention the physical labubank plushie when relevant
           - Be encouraging and positive
           
-          User message: ${message}`
-        }
-      ]
+          User message: ${message}`,
+        },
+      ],
     });
-    console.log('response', response);
+    console.log("response", response);
 
     const aiResponse = response.content[0].text;
     res.json({ response: aiResponse });
-
   } catch (error) {
-    console.error('Error calling Claude API:', error);
-    res.status(500).json({ 
-      error: 'Sorry, I\'m having trouble thinking right now. Try again in a moment!' 
+    console.error("Error calling Claude API:", error);
+    res.status(500).json({
+      error:
+        "Sorry, I'm having trouble thinking right now. Try again in a moment!",
     });
   }
 });
@@ -186,53 +190,65 @@ app.post('/api/generate-onramp-token', async (req, res) => {
 });
 
 // Endpoint to create/get deposit address
-app.post('/api/create-deposit-address', async (req, res) => {
+app.post("/api/create-deposit-address", async (req, res) => {
   try {
     const { userPublicAddress } = req.body;
 
     if (!userPublicAddress) {
-      return res.status(400).json({ error: 'userPublicAddress is required' });
+      return res.status(400).json({ error: "userPublicAddress is required" });
     }
 
-    console.log('Creating deposit address for user:', userPublicAddress);
+    console.log("Creating deposit address for user:", userPublicAddress);
 
     // Call the external API
-    const response = await fetch('http://45.55.38.82/api/create-deposit-address', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userPublicAddress }),
-    });
+    const response = await fetch(
+      "http://45.55.38.82/api/create-deposit-address",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userPublicAddress }),
+      }
+    );
 
     if (!response.ok) {
-      console.error('External API error:', response.status, response.statusText);
+      console.error(
+        "External API error:",
+        response.status,
+        response.statusText
+      );
       return res.status(response.status).json({
         error: `Failed to create deposit address: ${response.status} ${response.statusText}`,
       });
     }
 
     const data = await response.json();
-    console.log('Deposit address response:', data);
+    console.log("Deposit address response:", data);
 
     // Return the deposit address data
     res.json(data);
   } catch (error) {
-    console.error('Error creating deposit address:', error);
+    console.error("Error creating deposit address:", error);
     res.status(500).json({
-      error: 'Failed to create deposit address',
-      details: error instanceof Error ? error.message : 'Unknown error',
+      error: "Failed to create deposit address",
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Labubu backend server running on http://localhost:${port}`);
-  console.log('🔍 Debug - API Key exists:', !!process.env.CLAUDE_API_KEY);
-  console.log('🔍 Debug - API Key length:', process.env.CLAUDE_API_KEY ? process.env.CLAUDE_API_KEY.length : 0);
+  console.log(`🚀 labubank backend server running on http://localhost:${port}`);
+  console.log("🔍 Debug - API Key exists:", !!process.env.CLAUDE_API_KEY);
+  console.log(
+    "🔍 Debug - API Key length:",
+    process.env.CLAUDE_API_KEY ? process.env.CLAUDE_API_KEY.length : 0
+  );
   if (!process.env.CLAUDE_API_KEY) {
-    console.log('⚠️  Running in demo mode - add CLAUDE_API_KEY to .env file for real AI responses');
+    console.log(
+      "⚠️  Running in demo mode - add CLAUDE_API_KEY to .env file for real AI responses"
+    );
   } else {
-    console.log('✅ Claude AI connected and ready!');
+    console.log("✅ Claude AI connected and ready!");
   }
 });
