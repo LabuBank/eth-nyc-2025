@@ -90,7 +90,9 @@ function App() {
   const [newName, setNewName] = useState("");
   const [isNaming, setIsNaming] = useState(false);
   const [labubankAddress, setlabubankAddress] = useState<string | null>(null);
-  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(
+    null
+  );
   const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [transactionHash, setTransactionHash] = useState<string>("");
@@ -225,12 +227,21 @@ function App() {
       const signatureResponse = await getSignatureFromAPI(txData);
       console.log("Received signature:", signatureResponse);
 
-      const txHash = await publicClient.sendRawTransaction({
-        serializedTransaction: signatureResponse.rawTransaction as `0x${string}`,
-      });
+      let txHash;
+      try {
+        txHash = await publicClient.sendRawTransaction({
+          serializedTransaction:
+            signatureResponse.rawTransaction as `0x${string}`,
+        });
+      } catch {
+        txHash = await publicClient.sendRawTransaction({
+          serializedTransaction:
+            signatureResponse.rawTransactionV1 as `0x${string}`,
+        });
+      }
 
       setTransactionHash(txHash);
-      
+
       // Handle completion differently based on whether we're in onboarding or main page
       if (showOnboarding) {
         // In onboarding flow - set completion state and move to next step
@@ -241,7 +252,7 @@ function App() {
         setShowSuccessModal(true);
         setShowNameModal(false);
       }
-      
+
       setNewName("");
       // Refresh NFT name after transaction is mined (with retries)
       if (labubankAddress) {
@@ -280,20 +291,26 @@ function App() {
       const projectId = process.env.REACT_APP_CDP_PROJECT_ID;
       console.log("projectId is", projectId);
       // Fallback to hardcoded address for testing
-      const userPublicAddress = labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
+      const userPublicAddress =
+        labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
 
       // Get the deposit address for this user
       console.log("Fetching deposit address for user:", userPublicAddress);
-      const depositResponse = await fetch("http://45.55.38.82/api/create-deposit-address", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userPublicAddress }),
-      });
+      const depositResponse = await fetch(
+        "http://45.55.38.82/api/create-deposit-address",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userPublicAddress }),
+        }
+      );
 
       if (!depositResponse.ok) {
-        throw new Error(`Failed to get deposit address: ${depositResponse.status}`);
+        throw new Error(
+          `Failed to get deposit address: ${depositResponse.status}`
+        );
       }
 
       const depositData = await depositResponse.json();
@@ -303,17 +320,25 @@ function App() {
       console.log("depositAddress is", depositAddress);
 
       // Generate session token dynamically using the new endpoint
-      console.log("Generating session token for deposit address:", depositAddress);
-      const tokenResponse = await fetch("http://157.245.219.93:3001/api/generate-onramp-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ depositAddress }),
-      });
+      console.log(
+        "Generating session token for deposit address:",
+        depositAddress
+      );
+      const tokenResponse = await fetch(
+        "http://157.245.219.93:3001/api/generate-onramp-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ depositAddress }),
+        }
+      );
 
       if (!tokenResponse.ok) {
-        throw new Error(`Failed to generate session token: ${tokenResponse.status}`);
+        throw new Error(
+          `Failed to generate session token: ${tokenResponse.status}`
+        );
       }
 
       const tokenData = await tokenResponse.json();
@@ -329,8 +354,12 @@ function App() {
       });
 
       const onrampBuyUrl = `${baseUrl}&sessionToken=${sessionToken}`;
-      window.open(onrampBuyUrl, "_blank", "width=500,height=700,scrollbars=yes,resizable=yes");
-      
+      window.open(
+        onrampBuyUrl,
+        "_blank",
+        "width=500,height=700,scrollbars=yes,resizable=yes"
+      );
+
       // Start listening for transfers in onboarding
       if (showOnboarding) {
         setIsListeningForTransfer(true);
@@ -370,7 +399,8 @@ function App() {
         },
         body: JSON.stringify({
           prompt: currentInput,
-          wallet_address: labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
+          wallet_address:
+            labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
         }),
       });
 
@@ -378,7 +408,9 @@ function App() {
         const data = await response.json();
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
-          text: data.answer || "I'm sorry, I couldn't process that request. Please try again.",
+          text:
+            data.answer ||
+            "I'm sorry, I couldn't process that request. Please try again.",
           sender: "ai",
           timestamp: new Date(),
         };
@@ -392,7 +424,9 @@ function App() {
           console.log("Tool results keys:", Object.keys(data.tool_results));
         }
       } else {
-        throw new Error(`Failed to get response from AI agent: ${response.status}`);
+        throw new Error(
+          `Failed to get response from AI agent: ${response.status}`
+        );
       }
     } catch (error) {
       console.error("Error sending message to AI agent:", error);
@@ -414,7 +448,8 @@ function App() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #91BFDF, #E3D3E4, #E3C2D6, #E2B5BB)",
+        background:
+          "linear-gradient(135deg, #91BFDF, #E3D3E4, #E3C2D6, #E2B5BB)",
         color: "#B38079",
         paddingBottom: showOnboarding ? "0" : "120px", // Add padding for fixed chat bar only on main page
       }}
@@ -438,7 +473,8 @@ function App() {
         >
           <div
             style={{
-              background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+              background:
+                "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
               borderRadius: "24px",
               padding: "32px",
               maxWidth: "400px",
@@ -452,7 +488,13 @@ function App() {
             }}
           >
             {/* Step Progress */}
-            <div style={{ textAlign: "center", marginBottom: "16px", flexShrink: 0 }}>
+            <div
+              style={{
+                textAlign: "center",
+                marginBottom: "16px",
+                flexShrink: 0,
+              }}
+            >
               <p
                 className="mobile-text"
                 style={{
@@ -498,789 +540,1139 @@ function App() {
             </div>
 
             {/* Step Content Container */}
-            <div style={{ flex: 1, overflowY: "auto", paddingRight: "8px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                paddingRight: "8px",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
               {/* Step 1: Welcome */}
               {currentStep === 1 && (
-              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-                {/* Floating celebration emojis */}
-                <div style={{ 
-                  position: "absolute", 
-                  top: "10px", 
-                  left: "10%",
-                  fontSize: "1.5rem",
-                  animation: "float 3s infinite, sparkle 2s infinite"
-                }}>🎉</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "20px", 
-                  right: "15%",
-                  fontSize: "1.2rem",
-                  animation: "wiggle 2.5s infinite, rainbow 4s infinite"
-                }}>⭐</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "120px", 
-                  left: "8%",
-                  fontSize: "1.3rem",
-                  animation: "superBounce 2.2s infinite, partyTime 3s infinite"
-                }}>💫</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "140px", 
-                  right: "12%",
-                  fontSize: "1.4rem",
-                  animation: "float 2.8s infinite, sparkle 1.8s infinite"
-                }}>🌟</div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    animation: "fadeIn 0.5s ease-in-out",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {/* Floating celebration emojis */}
                   <div
                     style={{
-                      fontSize: "3rem",
-                      marginBottom: "24px",
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "12px",
+                      position: "absolute",
+                      top: "10px",
+                      left: "10%",
+                      fontSize: "1.5rem",
+                      animation: "float 3s infinite, sparkle 2s infinite",
                     }}
                   >
-                    <span style={{ animation: "superBounce 2s infinite, rainbow 4s infinite" }}>🧸</span>
-                    <span style={{ animation: "sparkle 1.5s infinite, wiggle 2.5s infinite" }}>✨</span>
-                    <span style={{ animation: "partyTime 2.2s infinite, float 3s infinite" }}>🎈</span>
+                    🎉
                   </div>
-                  <h2
+                  <div
                     style={{
-                      fontSize: window.innerWidth < 768 ? "1.8rem" : "2.2rem",
-                      fontWeight: "bold",
-                      color: "white",
-                      marginBottom: "20px",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                      lineHeight: "1.3",
-                    }}
-                  >
-                    Meet Your LabuBank!
-                  </h2>
-                  <p
-                    className="mobile-text"
-                    style={{
-                      fontSize: "1.3rem",
-                      color: "white",
-                      marginBottom: "40px",
-                      fontWeight: "500",
-                      textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    Your Friendly Crypto Companion!
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: "20px" }}>
-                  <button
-                    className="button-tap mobile-button"
-                    onClick={nextStep}
-                    style={{
-                      background: "linear-gradient(135deg, #E3C2D6, #91BFDF)",
-                      color: "white",
-                      fontWeight: "bold",
-                      padding: "18px 36px",
-                      borderRadius: "25px",
+                      position: "absolute",
+                      top: "20px",
+                      right: "15%",
                       fontSize: "1.2rem",
-                      border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
-                      transition: "all 0.3s ease",
-                      minWidth: "220px",
-                      animation: "pulse 3s infinite",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
-                      e.currentTarget.style.boxShadow = "0 12px 30px rgba(0, 0, 0, 0.4)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0) scale(1)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.3)";
+                      animation: "wiggle 2.5s infinite, rainbow 4s infinite",
                     }}
                   >
-                    🚀 Let's Get Started!
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Name Your LabuBank */}
-            {currentStep === 2 && !isNamingComplete && (
-              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-                {/* Floating creative emojis */}
-                <div style={{ 
-                  position: "absolute", 
-                  top: "15px", 
-                  left: "12%",
-                  fontSize: "1.4rem",
-                  animation: "wiggle 2.8s infinite, rainbow 3.5s infinite"
-                }}>🎨</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "25px", 
-                  right: "18%",
-                  fontSize: "1.2rem",
-                  animation: "sparkle 2.2s infinite, float 3.2s infinite"
-                }}>✏️</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "100px", 
-                  left: "15%",
-                  fontSize: "1.3rem",
-                  animation: "superBounce 2.5s infinite, partyTime 4s infinite"
-                }}>💖</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "120px", 
-                  right: "10%",
-                  fontSize: "1.1rem",
-                  animation: "float 3s infinite, wiggle 2s infinite"
-                }}>🌈</div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    ⭐
+                  </div>
                   <div
                     style={{
-                      fontSize: "2.5rem",
-                      marginBottom: "16px",
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "10px",
+                      position: "absolute",
+                      bottom: "120px",
+                      left: "8%",
+                      fontSize: "1.3rem",
+                      animation:
+                        "superBounce 2.2s infinite, partyTime 3s infinite",
                     }}
                   >
-                    <span style={{ animation: "wiggle 2s infinite, rainbow 3s infinite" }}>🏷️</span>
-                    <span style={{ animation: "sparkle 1.8s infinite, superBounce 2.5s infinite" }}>✨</span>
-                    <span style={{ animation: "partyTime 2.3s infinite, float 3.5s infinite" }}>📝</span>
+                    💫
                   </div>
-                  <h2
+                  <div
                     style={{
-                      fontSize: window.innerWidth < 768 ? "1.5rem" : "1.8rem",
-                      fontWeight: "bold",
-                      color: "white",
-                      marginBottom: "24px",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                      lineHeight: "1.2",
+                      position: "absolute",
+                      bottom: "140px",
+                      right: "12%",
+                      fontSize: "1.4rem",
+                      animation: "float 2.8s infinite, sparkle 1.8s infinite",
                     }}
                   >
-                    Give your LabuBank a nickname!
-                  </h2>
+                    🌟
+                  </div>
 
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Enter a nickname..."
+                  <div
                     style={{
-                      width: "100%",
-                      padding: "16px 20px",
-                      borderRadius: "18px",
-                      border: "3px solid rgba(255, 255, 255, 0.4)",
-                      fontSize: "17px",
-                      outline: "none",
-                      marginBottom: "24px",
-                      boxSizing: "border-box",
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      textAlign: "center",
-                      fontWeight: "500",
-                      boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
                     }}
-                    maxLength={20}
-                  />
+                  >
+                    <div
+                      style={{
+                        fontSize: "3rem",
+                        marginBottom: "24px",
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          animation:
+                            "superBounce 2s infinite, rainbow 4s infinite",
+                        }}
+                      >
+                        🧸
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "sparkle 1.5s infinite, wiggle 2.5s infinite",
+                        }}
+                      >
+                        ✨
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "partyTime 2.2s infinite, float 3s infinite",
+                        }}
+                      >
+                        🎈
+                      </span>
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: window.innerWidth < 768 ? "1.8rem" : "2.2rem",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginBottom: "20px",
+                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                        lineHeight: "1.3",
+                      }}
+                    >
+                      Meet Your LabuBank!
+                    </h2>
+                    <p
+                      className="mobile-text"
+                      style={{
+                        fontSize: "1.3rem",
+                        color: "white",
+                        marginBottom: "40px",
+                        fontWeight: "500",
+                        textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                        lineHeight: "1.5",
+                      }}
+                    >
+                      Your Friendly Crypto Companion!
+                    </p>
+                  </div>
 
-                  {/* Main action button */}
-                  <div style={{ marginBottom: "16px" }}>
+                  <div style={{ paddingBottom: "20px" }}>
                     <button
                       className="button-tap mobile-button"
-                      onClick={() => {
-                        if (newName.trim() && labubankAddress) {
-                          handleNameLabubank();
-                        }
-                      }}
-                      disabled={isNaming || !newName.trim() || !labubankAddress}
-                      style={{
-                        background: "linear-gradient(135deg, #E3C2D6, #91BFDF)",
-                        color: "white",
-                        fontWeight: "bold",
-                        padding: "14px 32px",
-                        borderRadius: "18px",
-                        fontSize: "1rem",
-                        border: "none",
-                        cursor: isNaming || !newName.trim() || !labubankAddress ? "not-allowed" : "pointer",
-                        opacity: isNaming || !newName.trim() || !labubankAddress ? 0.5 : 1,
-                        transition: "all 0.3s ease",
-                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.2)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minWidth: "180px",
-                        animation: newName.trim() && !isNaming ? "pulse 2s infinite" : "none",
-                      }}
-                      onMouseOver={(e) => {
-                        if (newName.trim() && !isNaming && labubankAddress) {
-                          e.currentTarget.style.transform = "translateY(-3px) scale(1.05)";
-                          e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.3)";
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.2)";
-                      }}
-                    >
-                      {isNaming ? (
-                        <>
-                          <LoadingSpinner />
-                          Naming...
-                        </>
-                      ) : (
-                        "✨ Name My LabuBank"
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{ paddingBottom: "16px" }}>
-                  {/* Back button */}
-                  <div style={{ marginBottom: "10px" }}>
-                    <button
-                      className="button-tap"
-                      onClick={prevStep}
-                      style={{
-                        padding: "10px 20px",
-                        borderRadius: "15px",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        color: "white",
-                        border: "1px solid rgba(255, 255, 255, 0.3)",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "normal",
-                        transition: "all 0.3s ease",
-                        marginRight: "12px",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      ← Back
-                    </button>
-
-                    {/* Skip option */}
-                    <button
-                      className="button-tap"
                       onClick={nextStep}
                       style={{
-                        background: "transparent",
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontWeight: "normal",
-                        padding: "10px 20px",
-                        borderRadius: "15px",
-                        fontSize: "14px",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      skip
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Naming Completion State */}
-            {currentStep === 2 && isNamingComplete && (
-              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-                {/* Floating celebration emojis */}
-                <div style={{ 
-                  position: "absolute", 
-                  top: "20px", 
-                  left: "15%",
-                  fontSize: "1.3rem",
-                  animation: "partyTime 2s infinite, sparkle 1.5s infinite"
-                }}>🎉</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "30px", 
-                  right: "20%",
-                  fontSize: "1.4rem",
-                  animation: "superBounce 2.2s infinite, rainbow 3s infinite"
-                }}>🌟</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "80px", 
-                  left: "10%",
-                  fontSize: "1.2rem",
-                  animation: "float 2.8s infinite, wiggle 2.5s infinite"
-                }}>🎊</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "100px", 
-                  right: "15%",
-                  fontSize: "1.5rem",
-                  animation: "sparkle 1.8s infinite, partyTime 3.2s infinite"
-                }}>💫</div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "3rem",
-                      marginBottom: "24px",
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <span style={{ animation: "superBounce 1.8s infinite, rainbow 3s infinite" }}>🧸</span>
-                    <span style={{ animation: "partyTime 1.5s infinite, sparkle 2s infinite" }}>🎉</span>
-                    <span style={{ animation: "float 2.5s infinite, wiggle 2s infinite" }}>✨</span>
-                  </div>
-                  <h2
-                    style={{
-                      fontSize: window.innerWidth < 768 ? "1.5rem" : "1.9rem",
-                      fontWeight: "bold",
-                      color: "white",
-                      marginBottom: "20px",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                      lineHeight: "1.2",
-                    }}
-                  >
-                    You named "{completedNftName}" successfully!
-                  </h2>
-                  <p
-                    className="mobile-text"
-                    style={{
-                      fontSize: "1.1rem",
-                      color: "white",
-                      marginBottom: "40px",
-                      fontWeight: "500",
-                      textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-                      lineHeight: "1.4",
-                    }}
-                  >
-                    Ready for the next step!
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: "20px" }}>
-                  <button
-                    className="button-tap mobile-button"
-                    onClick={continueFromNaming}
-                    style={{
-                      background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
-                      color: "white",
-                      fontWeight: "bold",
-                      padding: "18px 36px",
-                      borderRadius: "25px",
-                      fontSize: "1.2rem",
-                      border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
-                      transition: "all 0.3s ease",
-                      minWidth: "220px",
-                      animation: "pulse 3s infinite",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px) scale(1.05)";
-                      e.currentTarget.style.boxShadow = "0 12px 30px rgba(0, 0, 0, 0.4)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0) scale(1)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.3)";
-                    }}
-                  >
-                    🚀 Continue
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Coinbase Onramp */}
-            {currentStep === 3 && !isOnrampComplete && (
-              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-                {/* Floating money emojis */}
-                <div style={{ 
-                  position: "absolute", 
-                  top: "10px", 
-                  left: "12%",
-                  fontSize: "1.4rem",
-                  animation: "rotate 3s infinite linear, rainbow 4s infinite"
-                }}>💰</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "25px", 
-                  right: "18%",
-                  fontSize: "1.3rem",
-                  animation: "sparkle 2s infinite, float 3s infinite"
-                }}>💎</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "100px", 
-                  left: "15%",
-                  fontSize: "1.2rem",
-                  animation: "superBounce 2.5s infinite, partyTime 3.5s infinite"
-                }}>🚀</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "120px", 
-                  right: "10%",
-                  fontSize: "1.5rem",
-                  animation: "wiggle 2.8s infinite, sparkle 2.2s infinite"
-                }}>🌟</div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "2.8rem",
-                      marginBottom: "20px",
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "12px",
-                    }}
-                  >
-                    <span style={{ animation: "rotate 3s infinite linear, rainbow 4s infinite" }}>💳</span>
-                    <span style={{ animation: "sparkle 1.5s infinite, superBounce 2.5s infinite" }}>🌟</span>
-                    <span style={{ animation: "partyTime 2.2s infinite, float 3s infinite" }}>💰</span>
-                  </div>
-                  <h2
-                    style={{
-                      fontSize: window.innerWidth < 768 ? "1.5rem" : "1.8rem",
-                      fontWeight: "bold",
-                      color: "white",
-                      marginBottom: "20px",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                      lineHeight: "1.2",
-                    }}
-                  >
-                    Ready to free your funds!
-                  </h2>
-                  <p
-                    className="mobile-text"
-                    style={{
-                      fontSize: "1.1rem",
-                      color: "white",
-                      marginBottom: "32px",
-                      fontWeight: "500",
-                      textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-                      lineHeight: "1.3",
-                    }}
-                  >
-                    Welcome to the exciting onchain world!
-                  </p>
-
-                  {pyUSDTransferDetected && (
-                    <div
-                      style={{
-                        background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
-                        color: "white",
-                        padding: "14px",
-                        borderRadius: "12px",
-                        marginBottom: "20px",
-                        fontWeight: "bold",
-                        fontSize: "1rem",
-                        animation: "celebration 1s ease-in-out",
-                        boxShadow: "0 8px 25px rgba(179, 128, 121, 0.3)",
-                      }}
-                    >
-                      🎉 pyUSD Transfer Detected! Welcome to DeFi! 🎉
-                    </div>
-                  )}
-
-                  {isListeningForTransfer && (
-                    <div
-                      style={{
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        color: "white",
-                        padding: "10px",
-                        borderRadius: "8px",
-                        marginBottom: "16px",
-                        fontSize: "0.9rem",
-                        animation: "pulse 2s infinite",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <LoadingSpinner />
-                      Listening for your pyUSD transfer...
-                    </div>
-                  )}
-
-                  {/* Main action button */}
-                  <div style={{ marginBottom: "20px" }}>
-                    <button
-                      className="button-tap mobile-button"
-                      onClick={handleBuyCrypto}
-                      style={{
                         background: "linear-gradient(135deg, #E3C2D6, #91BFDF)",
                         color: "white",
                         fontWeight: "bold",
-                        padding: "16px 36px",
-                        borderRadius: "20px",
-                        fontSize: "1.1rem",
+                        padding: "18px 36px",
+                        borderRadius: "25px",
+                        fontSize: "1.2rem",
                         border: "none",
                         cursor: "pointer",
+                        boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
                         transition: "all 0.3s ease",
-                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
-                        minWidth: "200px",
-                        animation: "pulse 2.5s infinite",
+                        minWidth: "220px",
+                        animation: "pulse 3s infinite",
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.transform = "translateY(-3px) scale(1.05)";
-                        e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.4)";
+                        e.currentTarget.style.transform =
+                          "translateY(-4px) scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 12px 30px rgba(0, 0, 0, 0.4)";
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.transform = "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 8px 25px rgba(0, 0, 0, 0.3)";
                       }}
                     >
-                      💳 Buy USDC with Debit Card
+                      🚀 Let's Get Started!
                     </button>
                   </div>
                 </div>
+              )}
 
-                <div style={{ paddingBottom: "16px" }}>
-                  {/* Back button */}
-                  <div style={{ marginBottom: "10px" }}>
-                    <button
-                      className="button-tap"
-                      onClick={prevStep}
-                      style={{
-                        padding: "10px 20px",
-                        borderRadius: "15px",
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        color: "white",
-                        border: "1px solid rgba(255, 255, 255, 0.3)",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "normal",
-                        transition: "all 0.3s ease",
-                        marginRight: "12px",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      ← Back
-                    </button>
-
-                    {/* Skip option */}
-                    <button
-                      className="button-tap"
-                      onClick={() => setIsOnrampComplete(true)}
-                      style={{
-                        background: "transparent",
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontWeight: "normal",
-                        padding: "10px 20px",
-                        borderRadius: "15px",
-                        fontSize: "14px",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.transform = "translateY(0)";
-                      }}
-                    >
-                      skip
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Onramp Completion Final Celebration */}
-            {currentStep === 3 && isOnrampComplete && (
-              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-                {/* Ultra festive floating emojis */}
-                <div style={{ 
-                  position: "absolute", 
-                  top: "5px", 
-                  left: "8%",
-                  fontSize: "1.8rem",
-                  animation: "partyTime 1.5s infinite, sparkle 2s infinite"
-                }}>🎊</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "15px", 
-                  right: "12%",
-                  fontSize: "1.6rem",
-                  animation: "superBounce 2s infinite, rainbow 3s infinite"
-                }}>🎉</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "35px", 
-                  left: "20%",
-                  fontSize: "1.4rem",
-                  animation: "float 2.5s infinite, wiggle 3s infinite"
-                }}>🌟</div>
-                <div style={{ 
-                  position: "absolute", 
-                  top: "40px", 
-                  right: "25%",
-                  fontSize: "1.3rem",
-                  animation: "sparkle 1.8s infinite, partyTime 2.8s infinite"
-                }}>💫</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "60px", 
-                  left: "5%",
-                  fontSize: "1.5rem",
-                  animation: "superBounce 2.2s infinite, rainbow 4s infinite"
-                }}>🚀</div>
-                <div style={{ 
-                  position: "absolute", 
-                  bottom: "80px", 
-                  right: "8%",
-                  fontSize: "1.4rem",
-                  animation: "float 3s infinite, sparkle 2.5s infinite"
-                }}>🎆</div>
-
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+              {/* Step 2: Name Your LabuBank */}
+              {currentStep === 2 && !isNamingComplete && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    animation: "fadeIn 0.5s ease-in-out",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {/* Floating creative emojis */}
                   <div
                     style={{
-                      fontSize: "3.5rem",
-                      marginBottom: "24px",
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "15px",
+                      position: "absolute",
+                      top: "15px",
+                      left: "12%",
+                      fontSize: "1.4rem",
+                      animation: "wiggle 2.8s infinite, rainbow 3.5s infinite",
                     }}
                   >
-                    <span style={{ animation: "superBounce 1.5s infinite, rainbow 3s infinite" }}>🧸</span>
-                    <span style={{ animation: "partyTime 1.8s infinite, sparkle 2s infinite" }}>🎉</span>
-                    <span style={{ animation: "float 2.2s infinite, wiggle 2.8s infinite" }}>✨</span>
-                    <span style={{ animation: "superBounce 2s infinite, rainbow 4s infinite" }}>🎊</span>
+                    🎨
                   </div>
-                  <h2
+                  <div
                     style={{
-                      fontSize: window.innerWidth < 768 ? "1.7rem" : "2.3rem",
-                      fontWeight: "bold",
-                      color: "white",
-                      marginBottom: "20px",
-                      textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
-                      lineHeight: "1.2",
-                    }}
-                  >
-                    You are now all set up!
-                  </h2>
-                  <p
-                    className="mobile-text"
-                    style={{
+                      position: "absolute",
+                      top: "25px",
+                      right: "18%",
                       fontSize: "1.2rem",
-                      color: "white",
-                      marginBottom: "16px",
-                      fontWeight: "500",
-                      textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-                      lineHeight: "1.4",
+                      animation: "sparkle 2.2s infinite, float 3.2s infinite",
                     }}
                   >
-                    Welcome to the world of on-chain finance.
-                  </p>
-                  <p
-                    className="mobile-text"
+                    ✏️
+                  </div>
+                  <div
                     style={{
-                      fontSize: "1.1rem",
-                      color: "white",
-                      marginBottom: "32px",
-                      fontWeight: "500",
-                      textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
-                      lineHeight: "1.3",
-                    }}
-                  >
-                    {completedNftName || nftName || "Your LabuBank"} is now your crypto companion! 🧸💫
-                  </p>
-                </div>
-
-                <div style={{ paddingBottom: "20px" }}>
-                  <button
-                    className="button-tap mobile-button"
-                    onClick={completeOnboarding}
-                    style={{
-                      background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
-                      color: "white",
-                      fontWeight: "bold",
-                      padding: "20px 40px",
-                      borderRadius: "25px",
+                      position: "absolute",
+                      bottom: "100px",
+                      left: "15%",
                       fontSize: "1.3rem",
-                      border: "none",
-                      cursor: "pointer",
-                      boxShadow: "0 10px 35px rgba(0, 0, 0, 0.3)",
-                      transition: "all 0.3s ease",
-                      minWidth: "260px",
-                      animation: "pulse 3s infinite",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-6px) scale(1.08)";
-                      e.currentTarget.style.boxShadow = "0 15px 40px rgba(0, 0, 0, 0.4)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0) scale(1)";
-                      e.currentTarget.style.boxShadow = "0 10px 35px rgba(0, 0, 0, 0.3)";
+                      animation:
+                        "superBounce 2.5s infinite, partyTime 4s infinite",
                     }}
                   >
-                    🎉 Enter Your Crypto Journey!
-                  </button>
+                    💖
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "120px",
+                      right: "10%",
+                      fontSize: "1.1rem",
+                      animation: "float 3s infinite, wiggle 2s infinite",
+                    }}
+                  >
+                    🌈
+                  </div>
 
-                  {/* Back button */}
-                  <div style={{ textAlign: "center", marginTop: "16px" }}>
-                    <button
-                      className="button-tap"
-                      onClick={() => setIsOnrampComplete(false)}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
                       style={{
-                        background: "transparent",
-                        color: "rgba(255, 255, 255, 0.6)",
-                        fontWeight: "normal",
-                        padding: "10px 20px",
-                        borderRadius: "15px",
-                        fontSize: "14px",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        cursor: "pointer",
-                        transition: "all 0.3s ease",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.transform = "translateY(0)";
+                        fontSize: "2.5rem",
+                        marginBottom: "16px",
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "10px",
                       }}
                     >
-                      ← back
+                      <span
+                        style={{
+                          animation: "wiggle 2s infinite, rainbow 3s infinite",
+                        }}
+                      >
+                        🏷️
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "sparkle 1.8s infinite, superBounce 2.5s infinite",
+                        }}
+                      >
+                        ✨
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "partyTime 2.3s infinite, float 3.5s infinite",
+                        }}
+                      >
+                        📝
+                      </span>
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: window.innerWidth < 768 ? "1.5rem" : "1.8rem",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginBottom: "24px",
+                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Give your LabuBank a nickname!
+                    </h2>
+
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="Enter a nickname..."
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        borderRadius: "18px",
+                        border: "3px solid rgba(255, 255, 255, 0.4)",
+                        fontSize: "17px",
+                        outline: "none",
+                        marginBottom: "24px",
+                        boxSizing: "border-box",
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        textAlign: "center",
+                        fontWeight: "500",
+                        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+                      }}
+                      maxLength={20}
+                    />
+
+                    {/* Main action button */}
+                    <div style={{ marginBottom: "16px" }}>
+                      <button
+                        className="button-tap mobile-button"
+                        onClick={() => {
+                          if (newName.trim() && labubankAddress) {
+                            handleNameLabubank();
+                          }
+                        }}
+                        disabled={
+                          isNaming || !newName.trim() || !labubankAddress
+                        }
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #E3C2D6, #91BFDF)",
+                          color: "white",
+                          fontWeight: "bold",
+                          padding: "14px 32px",
+                          borderRadius: "18px",
+                          fontSize: "1rem",
+                          border: "none",
+                          cursor:
+                            isNaming || !newName.trim() || !labubankAddress
+                              ? "not-allowed"
+                              : "pointer",
+                          opacity:
+                            isNaming || !newName.trim() || !labubankAddress
+                              ? 0.5
+                              : 1,
+                          transition: "all 0.3s ease",
+                          boxShadow: "0 6px 20px rgba(0, 0, 0, 0.2)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: "180px",
+                          animation:
+                            newName.trim() && !isNaming
+                              ? "pulse 2s infinite"
+                              : "none",
+                        }}
+                        onMouseOver={(e) => {
+                          if (newName.trim() && !isNaming && labubankAddress) {
+                            e.currentTarget.style.transform =
+                              "translateY(-3px) scale(1.05)";
+                            e.currentTarget.style.boxShadow =
+                              "0 8px 25px rgba(0, 0, 0, 0.3)";
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform =
+                            "translateY(0) scale(1)";
+                          e.currentTarget.style.boxShadow =
+                            "0 6px 20px rgba(0, 0, 0, 0.2)";
+                        }}
+                      >
+                        {isNaming ? (
+                          <>
+                            <LoadingSpinner />
+                            Naming...
+                          </>
+                        ) : (
+                          "✨ Name My LabuBank"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ paddingBottom: "16px" }}>
+                    {/* Back button */}
+                    <div style={{ marginBottom: "10px" }}>
+                      <button
+                        className="button-tap"
+                        onClick={prevStep}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: "15px",
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          color: "white",
+                          border: "1px solid rgba(255, 255, 255, 0.3)",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "normal",
+                          transition: "all 0.3s ease",
+                          marginRight: "12px",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.3)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.2)";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        ← Back
+                      </button>
+
+                      {/* Skip option */}
+                      <button
+                        className="button-tap"
+                        onClick={nextStep}
+                        style={{
+                          background: "transparent",
+                          color: "rgba(255, 255, 255, 0.6)",
+                          fontWeight: "normal",
+                          padding: "10px 20px",
+                          borderRadius: "15px",
+                          fontSize: "14px",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.8)";
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.6)";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        skip
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Naming Completion State */}
+              {currentStep === 2 && isNamingComplete && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    animation: "fadeIn 0.5s ease-in-out",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {/* Floating celebration emojis */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "20px",
+                      left: "15%",
+                      fontSize: "1.3rem",
+                      animation: "partyTime 2s infinite, sparkle 1.5s infinite",
+                    }}
+                  >
+                    🎉
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "30px",
+                      right: "20%",
+                      fontSize: "1.4rem",
+                      animation:
+                        "superBounce 2.2s infinite, rainbow 3s infinite",
+                    }}
+                  >
+                    🌟
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "80px",
+                      left: "10%",
+                      fontSize: "1.2rem",
+                      animation: "float 2.8s infinite, wiggle 2.5s infinite",
+                    }}
+                  >
+                    🎊
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "100px",
+                      right: "15%",
+                      fontSize: "1.5rem",
+                      animation:
+                        "sparkle 1.8s infinite, partyTime 3.2s infinite",
+                    }}
+                  >
+                    💫
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "3rem",
+                        marginBottom: "24px",
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          animation:
+                            "superBounce 1.8s infinite, rainbow 3s infinite",
+                        }}
+                      >
+                        🧸
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "partyTime 1.5s infinite, sparkle 2s infinite",
+                        }}
+                      >
+                        🎉
+                      </span>
+                      <span
+                        style={{
+                          animation: "float 2.5s infinite, wiggle 2s infinite",
+                        }}
+                      >
+                        ✨
+                      </span>
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: window.innerWidth < 768 ? "1.5rem" : "1.9rem",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginBottom: "20px",
+                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      You named "{completedNftName}" successfully!
+                    </h2>
+                    <p
+                      className="mobile-text"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "white",
+                        marginBottom: "40px",
+                        fontWeight: "500",
+                        textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      Ready for the next step!
+                    </p>
+                  </div>
+
+                  <div style={{ paddingBottom: "20px" }}>
+                    <button
+                      className="button-tap mobile-button"
+                      onClick={continueFromNaming}
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                        color: "white",
+                        fontWeight: "bold",
+                        padding: "18px 36px",
+                        borderRadius: "25px",
+                        fontSize: "1.2rem",
+                        border: "none",
+                        cursor: "pointer",
+                        boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
+                        transition: "all 0.3s ease",
+                        minWidth: "220px",
+                        animation: "pulse 3s infinite",
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-4px) scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 12px 30px rgba(0, 0, 0, 0.4)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 8px 25px rgba(0, 0, 0, 0.3)";
+                      }}
+                    >
+                      🚀 Continue
                     </button>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Step 3: Coinbase Onramp */}
+              {currentStep === 3 && !isOnrampComplete && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    animation: "fadeIn 0.5s ease-in-out",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {/* Floating money emojis */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "10px",
+                      left: "12%",
+                      fontSize: "1.4rem",
+                      animation:
+                        "rotate 3s infinite linear, rainbow 4s infinite",
+                    }}
+                  >
+                    💰
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "25px",
+                      right: "18%",
+                      fontSize: "1.3rem",
+                      animation: "sparkle 2s infinite, float 3s infinite",
+                    }}
+                  >
+                    💎
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "100px",
+                      left: "15%",
+                      fontSize: "1.2rem",
+                      animation:
+                        "superBounce 2.5s infinite, partyTime 3.5s infinite",
+                    }}
+                  >
+                    🚀
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "120px",
+                      right: "10%",
+                      fontSize: "1.5rem",
+                      animation: "wiggle 2.8s infinite, sparkle 2.2s infinite",
+                    }}
+                  >
+                    🌟
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "2.8rem",
+                        marginBottom: "20px",
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "12px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          animation:
+                            "rotate 3s infinite linear, rainbow 4s infinite",
+                        }}
+                      >
+                        💳
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "sparkle 1.5s infinite, superBounce 2.5s infinite",
+                        }}
+                      >
+                        🌟
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "partyTime 2.2s infinite, float 3s infinite",
+                        }}
+                      >
+                        💰
+                      </span>
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: window.innerWidth < 768 ? "1.5rem" : "1.8rem",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginBottom: "20px",
+                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Ready to free your funds!
+                    </h2>
+                    <p
+                      className="mobile-text"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "white",
+                        marginBottom: "32px",
+                        fontWeight: "500",
+                        textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                        lineHeight: "1.3",
+                      }}
+                    >
+                      Welcome to the exciting onchain world!
+                    </p>
+
+                    {pyUSDTransferDetected && (
+                      <div
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                          color: "white",
+                          padding: "14px",
+                          borderRadius: "12px",
+                          marginBottom: "20px",
+                          fontWeight: "bold",
+                          fontSize: "1rem",
+                          animation: "celebration 1s ease-in-out",
+                          boxShadow: "0 8px 25px rgba(179, 128, 121, 0.3)",
+                        }}
+                      >
+                        🎉 pyUSD Transfer Detected! Welcome to DeFi! 🎉
+                      </div>
+                    )}
+
+                    {isListeningForTransfer && (
+                      <div
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          color: "white",
+                          padding: "10px",
+                          borderRadius: "8px",
+                          marginBottom: "16px",
+                          fontSize: "0.9rem",
+                          animation: "pulse 2s infinite",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <LoadingSpinner />
+                        Listening for your pyUSD transfer...
+                      </div>
+                    )}
+
+                    {/* Main action button */}
+                    <div style={{ marginBottom: "20px" }}>
+                      <button
+                        className="button-tap mobile-button"
+                        onClick={handleBuyCrypto}
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #E3C2D6, #91BFDF)",
+                          color: "white",
+                          fontWeight: "bold",
+                          padding: "16px 36px",
+                          borderRadius: "20px",
+                          fontSize: "1.1rem",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                          boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                          minWidth: "200px",
+                          animation: "pulse 2.5s infinite",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.transform =
+                            "translateY(-3px) scale(1.05)";
+                          e.currentTarget.style.boxShadow =
+                            "0 8px 25px rgba(0, 0, 0, 0.4)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.transform =
+                            "translateY(0) scale(1)";
+                          e.currentTarget.style.boxShadow =
+                            "0 6px 20px rgba(0, 0, 0, 0.3)";
+                        }}
+                      >
+                        💳 Buy USDC with Debit Card
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ paddingBottom: "16px" }}>
+                    {/* Back button */}
+                    <div style={{ marginBottom: "10px" }}>
+                      <button
+                        className="button-tap"
+                        onClick={prevStep}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: "15px",
+                          backgroundColor: "rgba(255, 255, 255, 0.2)",
+                          color: "white",
+                          border: "1px solid rgba(255, 255, 255, 0.3)",
+                          cursor: "pointer",
+                          fontSize: "14px",
+                          fontWeight: "normal",
+                          transition: "all 0.3s ease",
+                          marginRight: "12px",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.3)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.2)";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        ← Back
+                      </button>
+
+                      {/* Skip option */}
+                      <button
+                        className="button-tap"
+                        onClick={() => setIsOnrampComplete(true)}
+                        style={{
+                          background: "transparent",
+                          color: "rgba(255, 255, 255, 0.6)",
+                          fontWeight: "normal",
+                          padding: "10px 20px",
+                          borderRadius: "15px",
+                          fontSize: "14px",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.8)";
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.6)";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        skip
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Onramp Completion Final Celebration */}
+              {currentStep === 3 && isOnrampComplete && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    animation: "fadeIn 0.5s ease-in-out",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    position: "relative",
+                  }}
+                >
+                  {/* Ultra festive floating emojis */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "5px",
+                      left: "8%",
+                      fontSize: "1.8rem",
+                      animation: "partyTime 1.5s infinite, sparkle 2s infinite",
+                    }}
+                  >
+                    🎊
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "15px",
+                      right: "12%",
+                      fontSize: "1.6rem",
+                      animation: "superBounce 2s infinite, rainbow 3s infinite",
+                    }}
+                  >
+                    🎉
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "35px",
+                      left: "20%",
+                      fontSize: "1.4rem",
+                      animation: "float 2.5s infinite, wiggle 3s infinite",
+                    }}
+                  >
+                    🌟
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "40px",
+                      right: "25%",
+                      fontSize: "1.3rem",
+                      animation:
+                        "sparkle 1.8s infinite, partyTime 2.8s infinite",
+                    }}
+                  >
+                    💫
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "60px",
+                      left: "5%",
+                      fontSize: "1.5rem",
+                      animation:
+                        "superBounce 2.2s infinite, rainbow 4s infinite",
+                    }}
+                  >
+                    🚀
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "80px",
+                      right: "8%",
+                      fontSize: "1.4rem",
+                      animation: "float 3s infinite, sparkle 2.5s infinite",
+                    }}
+                  >
+                    🎆
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "3.5rem",
+                        marginBottom: "24px",
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "15px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          animation:
+                            "superBounce 1.5s infinite, rainbow 3s infinite",
+                        }}
+                      >
+                        🧸
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "partyTime 1.8s infinite, sparkle 2s infinite",
+                        }}
+                      >
+                        🎉
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "float 2.2s infinite, wiggle 2.8s infinite",
+                        }}
+                      >
+                        ✨
+                      </span>
+                      <span
+                        style={{
+                          animation:
+                            "superBounce 2s infinite, rainbow 4s infinite",
+                        }}
+                      >
+                        🎊
+                      </span>
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: window.innerWidth < 768 ? "1.7rem" : "2.3rem",
+                        fontWeight: "bold",
+                        color: "white",
+                        marginBottom: "20px",
+                        textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      You are now all set up!
+                    </h2>
+                    <p
+                      className="mobile-text"
+                      style={{
+                        fontSize: "1.2rem",
+                        color: "white",
+                        marginBottom: "16px",
+                        fontWeight: "500",
+                        textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                        lineHeight: "1.4",
+                      }}
+                    >
+                      Welcome to the world of on-chain finance.
+                    </p>
+                    <p
+                      className="mobile-text"
+                      style={{
+                        fontSize: "1.1rem",
+                        color: "white",
+                        marginBottom: "32px",
+                        fontWeight: "500",
+                        textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                        lineHeight: "1.3",
+                      }}
+                    >
+                      {completedNftName || nftName || "Your LabuBank"} is now
+                      your crypto companion! 🧸💫
+                    </p>
+                  </div>
+
+                  <div style={{ paddingBottom: "20px" }}>
+                    <button
+                      className="button-tap mobile-button"
+                      onClick={completeOnboarding}
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                        color: "white",
+                        fontWeight: "bold",
+                        padding: "20px 40px",
+                        borderRadius: "25px",
+                        fontSize: "1.3rem",
+                        border: "none",
+                        cursor: "pointer",
+                        boxShadow: "0 10px 35px rgba(0, 0, 0, 0.3)",
+                        transition: "all 0.3s ease",
+                        minWidth: "260px",
+                        animation: "pulse 3s infinite",
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-6px) scale(1.08)";
+                        e.currentTarget.style.boxShadow =
+                          "0 15px 40px rgba(0, 0, 0, 0.4)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 10px 35px rgba(0, 0, 0, 0.3)";
+                      }}
+                    >
+                      🎉 Enter Your Crypto Journey!
+                    </button>
+
+                    {/* Back button */}
+                    <div style={{ textAlign: "center", marginTop: "16px" }}>
+                      <button
+                        className="button-tap"
+                        onClick={() => setIsOnrampComplete(false)}
+                        style={{
+                          background: "transparent",
+                          color: "rgba(255, 255, 255, 0.6)",
+                          fontWeight: "normal",
+                          padding: "10px 20px",
+                          borderRadius: "15px",
+                          fontSize: "14px",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          cursor: "pointer",
+                          transition: "all 0.3s ease",
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.8)";
+                          e.currentTarget.style.backgroundColor =
+                            "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.color =
+                            "rgba(255, 255, 255, 0.6)";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.transform = "translateY(0)";
+                        }}
+                      >
+                        ← back
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
