@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm start)",
       "Bash(npm install:*)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
