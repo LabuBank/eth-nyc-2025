@@ -261,7 +261,7 @@ function App() {
   const handleBuyCrypto = async () => {
     try {
       const projectId = process.env.REACT_APP_CDP_PROJECT_ID;
-      console.log('projectId is', projectId);
+      console.log("projectId is", projectId);
       // Fallback to hardcoded address for testing
       const userPublicAddress =
         labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
@@ -269,7 +269,7 @@ function App() {
       // Get the deposit address for this user
       console.log("Fetching deposit address for user:", userPublicAddress);
       const depositResponse = await fetch(
-        "http://localhost:3001/api/create-deposit-address",
+        "http://45.55.38.82:3001/api/create-deposit-address",
         {
           method: "POST",
           headers: {
@@ -289,30 +289,38 @@ function App() {
       console.log("Deposit address data:", depositData);
       const depositAddress = depositData.depositAddress;
 
-      console.log('depositAddress is', depositAddress);
+      console.log("depositAddress is", depositAddress);
 
       // Generate session token dynamically using the new endpoint
-      console.log('Generating session token for deposit address:', depositAddress);
-      const tokenResponse = await fetch('http://localhost:3001/api/generate-onramp-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ depositAddress }),
-      });
+      console.log(
+        "Generating session token for deposit address:",
+        depositAddress
+      );
+      const tokenResponse = await fetch(
+        "http://45.55.38.82:3001/api/generate-onramp-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ depositAddress }),
+        }
+      );
 
       if (!tokenResponse.ok) {
-        throw new Error(`Failed to generate session token: ${tokenResponse.status}`);
+        throw new Error(
+          `Failed to generate session token: ${tokenResponse.status}`
+        );
       }
 
       const tokenData = await tokenResponse.json();
-      console.log('Generated session token data:', tokenData);
+      console.log("Generated session token data:", tokenData);
       const sessionToken = tokenData.token;
 
       const baseUrl = getOnrampBuyUrl({
         projectId: projectId as string,
-        addresses: { [depositAddress]: ['ethereum'] },
-        assets: ['USDC'],
+        addresses: { [depositAddress]: ["ethereum"] },
+        assets: ["USDC"],
         presetFiatAmount: 20,
         fiatCurrency: "USD",
       });
@@ -458,20 +466,18 @@ function App() {
       {/* Header */}
       <header style={{ padding: "16px", textAlign: "center" }}>
         <div style={{ marginBottom: "16px" }}>
-          <img 
-            src="/labuBankLogoCropped.jpg" 
-            alt="LabuBank Logo" 
+          <img
+            src="/labuBankLogoCropped.jpg"
+            alt="LabuBank Logo"
             style={{
               height: "80px",
               width: "auto",
               borderRadius: "12px",
-              boxShadow: "0 4px 15px rgba(179, 128, 121, 0.2)"
+              boxShadow: "0 4px 15px rgba(179, 128, 121, 0.2)",
             }}
           />
         </div>
-        <p className="labu-header-secondary">
-          Your friendly crypto companion
-        </p>
+        <p className="labu-header-secondary">Your friendly crypto companion</p>
       </header>
 
       {/* labubank Address Display */}
@@ -592,11 +598,7 @@ function App() {
             flexDirection: "column",
           }}
         >
-          <h3
-           className="labu-header-tertiary" 
-          >
-            Chat with your Labubank
-          </h3>
+          <h3 className="labu-header-tertiary">Chat with your Labubank</h3>
 
           {/* Messages Container */}
           <div
@@ -716,14 +718,8 @@ function App() {
             color: "#B38079",
           }}
         >
-          <h2
-            className="labu-header-tertiary"
-          >
-            Welcome to Crypto!
-          </h2>
-          <p
-            className="labu-text"
-          >
+          <h2 className="labu-header-tertiary">Welcome to Crypto!</h2>
+          <p className="labu-text">
             Tap your labubank plushie to start your crypto journey. Your digital
             companion will guide you through the world of cryptocurrency.
           </p>

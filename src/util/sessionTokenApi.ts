@@ -24,24 +24,24 @@ export async function generateSessionToken(
   params: SessionTokenRequest
 ): Promise<string | null> {
   try {
-    const response = await fetch('http://localhost:3001/api/session', {
-      method: 'POST',
+    const response = await fetch("http://45.55.38.82:3001/api/session", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(params),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Session token generation failed:', error);
-      throw new Error(error.error || 'Failed to generate session token');
+      console.error("Session token generation failed:", error);
+      throw new Error(error.error || "Failed to generate session token");
     }
 
     const data: SessionTokenResponse = await response.json();
     return data.token;
   } catch (error) {
-    console.error('Error generating session token:', error);
+    console.error("Error generating session token:", error);
     return null;
   }
 }
@@ -66,7 +66,7 @@ export function formatAddressesForToken(
 
 /**
  * Example usage for developers
- * 
+ *
  * ```typescript
  * // Generate a session token for onramp
  * const token = await generateSessionToken({
@@ -76,11 +76,11 @@ export function formatAddressesForToken(
  *   }],
  *   assets: ["ETH", "USDC"]
  * });
- * 
+ *
  * // Use the token in onramp URL
  * const onrampUrl = generateOnrampURL({
  *   sessionToken: token,
  *   // ... other params
  * });
  * ```
- */ 
+ */
