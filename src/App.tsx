@@ -297,7 +297,7 @@ function App() {
         depositAddress
       );
       const tokenResponse = await fetch(
-        "http://157.245.219.93/api/generate-onramp-token",
+        "http://157.245.219.93:3001/api/generate-onramp-token",
         {
           method: "POST",
           headers: {
