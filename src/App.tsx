@@ -2,7 +2,6 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 import { getOnrampBuyUrl } from '@coinbase/onchainkit/fund';
-import { generateSessionToken, formatAddressesForToken } from './util/sessionTokenApi';
 
 function LabubuModel() {
   const { scene } = useGLTF('/model.glb');
@@ -41,8 +40,8 @@ function App() {
 
   const handleBuyCrypto = async () => {
     try {
-      const projectId = '615b11a0-4015-46f1-b809-4f3cafc9e32a';
-      
+      const projectId = process.env.REACT_APP_CDP_PROJECT_ID;
+      console.log('projectId is', projectId);
       // Fallback to hardcoded address for testing
       const userPublicAddress = labubuAddress || '0x94544835Cf97c631f101c5f538787fE14E2E04f6';
 
@@ -66,14 +65,33 @@ function App() {
 
       console.log('depositAddress is', depositAddress);
 
+      // Generate session token dynamically using the new endpoint
+      console.log('Generating session token for deposit address:', depositAddress);
+      const tokenResponse = await fetch('http://localhost:3001/api/generate-onramp-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ depositAddress }),
+      });
+
+      if (!tokenResponse.ok) {
+        throw new Error(`Failed to generate session token: ${tokenResponse.status}`);
+      }
+
+      const tokenData = await tokenResponse.json();
+      console.log('Generated session token data:', tokenData);
+      const sessionToken = tokenData.token;
+
       const baseUrl = getOnrampBuyUrl({
-        projectId,
+        projectId: projectId as string,
         addresses: { [depositAddress]: ['ethereum'] },
         assets: ['USDC'],
         presetFiatAmount: 20,
         fiatCurrency: 'USD',
       });
-      const sessionToken = "MWYwN2FmODAtYzY5OC02YmVhLTg4NDktN2U0NjdmMjlkZDQx";
+
+      // const sessionToken = "MWYwN2FmODAtYzY5OC02YmVhLTg4NDktN2U0NjdmMjlkZDQx";
       const onrampBuyUrl = `${baseUrl}&sessionToken=${sessionToken}`;
       window.open(onrampBuyUrl, '_blank', 'width=500,height=700,scrollbars=yes,resizable=yes');
     } catch (error) {
