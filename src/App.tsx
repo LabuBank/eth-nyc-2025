@@ -556,6 +556,7 @@ function App() {
         background:
           "linear-gradient(135deg, #91BFDF, #E3D3E4, #E3C2D6, #E2B5BB)",
         color: "#B38079",
+        paddingBottom: "120px", // Add padding for fixed chat bar
       }}
     >
       {/* Header */}
@@ -844,131 +845,169 @@ function App() {
                   transform: scale(1.2) rotate(180deg);
                 }
               }
+              
+              @keyframes messageSlideIn {
+                0% {
+                  opacity: 0;
+                  transform: translateX(20px) scale(0.9);
+                }
+                100% {
+                  opacity: 1;
+                  transform: translateX(0) scale(1);
+                }
+              }
             `}
           </style>
         </div>
       )}
 
-      {/* Chat Section */}
-      <div style={{ padding: "0 16px 16px" }}>
-        <div
-          style={{
-            backgroundColor: "rgba(227, 211, 228, 0.9)",
-            borderRadius: "16px",
-            padding: "20px",
-            boxShadow: "0 10px 30px rgba(179, 128, 121, 0.15)",
-            color: "#B38079",
-            maxHeight: "400px",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <h3 className="labu-header-tertiary">Chat with your LabuBank</h3>
-
-          {/* Messages Container */}
+      {/* Chat Messages Overlay */}
+      <div style={{ position: "relative", pointerEvents: "none" }}>
+        {messages.map((message) => (
           <div
+            key={message.id}
             style={{
-              flex: 1,
-              overflowY: "auto",
-              marginBottom: "16px",
-              maxHeight: "280px",
-              padding: "8px 0",
+              position: "absolute",
+              left: "60%",
+              top: message.sender === "user" ? "20%" : "30%",
+              maxWidth: "300px",
+              pointerEvents: "none",
+              zIndex: 10,
             }}
           >
-            {messages.map((message) => (
+            {message.sender === "ai" && (
               <div
-                key={message.id}
                 style={{
-                  marginBottom: "16px",
-                  display: "flex",
-                  justifyContent:
-                    message.sender === "user" ? "flex-end" : "flex-start",
+                  padding: "16px 20px",
+                  borderRadius: "24px",
+                  background: "rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid rgba(255, 255, 255, 0.2)",
+                  color: "white",
+                  fontSize: "14px",
+                  lineHeight: "1.6",
+                  textAlign: "left",
+                  overflowWrap: "break-word",
+                  wordWrap: "break-word",
+                  whiteSpace: "pre-wrap",
+                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                  animation: "messageSlideIn 0.5s ease-out",
                 }}
               >
-                <div
-                  style={{
-                    maxWidth: message.sender === "user" ? "80%" : "90%",
-                    padding:
-                      message.sender === "user" ? "10px 14px" : "16px 20px",
-                    borderRadius: "18px",
-                    backgroundColor:
-                      message.sender === "user"
-                        ? "#91BFDF"
-                        : "rgba(227, 194, 214, 0.8)",
-                    color: message.sender === "user" ? "white" : "#B38079",
-                    fontSize: "14px",
-                    lineHeight: "1.6",
-                    textAlign: message.sender === "user" ? "left" : "left",
-                    overflowWrap: "break-word",
-                    wordWrap: "break-word",
-                    whiteSpace: "pre-wrap",
-                    boxShadow:
-                      message.sender === "user"
-                        ? "0 2px 8px rgba(145, 191, 223, 0.3)"
-                        : "0 2px 8px rgba(227, 194, 214, 0.3)",
-                  }}
-                >
-                  {message.text}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <div
-                  style={{
-                    padding: "16px 20px",
-                    borderRadius: "18px",
-                    backgroundColor: "rgba(227, 194, 214, 0.6)",
-                    color: "#B38079",
-                    fontSize: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <span style={{ fontSize: "16px" }}>⏳</span>
-                  LabuBank is thinking...
-                </div>
+                {message.text}
               </div>
             )}
           </div>
-
-          {/* Input Container */}
-          <div style={{ display: "flex", gap: "10px" }}>
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask LabuBank about crypto..."
+        ))}
+        {isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              left: "60%",
+              top: "40%",
+              maxWidth: "300px",
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          >
+            <div
               style={{
-                flex: 1,
-                padding: "12px 16px",
+                padding: "16px 20px",
                 borderRadius: "24px",
-                border: "2px solid rgba(227, 194, 214, 0.5)",
-                fontSize: "14px",
-                outline: "none",
-                backgroundColor: "rgba(255, 255, 255, 0.8)",
-              }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-              style={{
-                padding: "12px 20px",
-                borderRadius: "24px",
-                backgroundColor: "#91BFDF",
+                background: "rgba(255, 255, 255, 0.15)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 color: "white",
-                border: "none",
-                cursor: "pointer",
                 fontSize: "14px",
-                fontWeight: "bold",
-                opacity: isLoading || !inputMessage.trim() ? 0.5 : 1,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                animation: "messageSlideIn 0.5s ease-out",
               }}
             >
-              Send
-            </button>
+              <span style={{ fontSize: "16px" }}>⏳</span>
+              labubank is thinking...
+            </div>
           </div>
+        )}
+      </div>
+
+      {/* Chat Bar */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "20px 16px 40px",
+          background:
+            "linear-gradient(180deg, transparent 0%, rgba(145, 191, 223, 0.1) 50%, rgba(145, 191, 223, 0.3) 100%)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          zIndex: 100,
+        }}
+      >
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Ask labubank about crypto..."
+            style={{
+              flex: 1,
+              padding: "16px 20px",
+              borderRadius: "28px",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              fontSize: "16px",
+              outline: "none",
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              color: "white",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            }}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !inputMessage.trim()}
+            style={{
+              padding: "16px 20px",
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #91BFDF, #E3C2D6)",
+              color: "white",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "18px",
+              fontWeight: "bold",
+              opacity: isLoading || !inputMessage.trim() ? 0.5 : 1,
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
+              transition: "all 0.3s ease",
+              minWidth: "56px",
+              minHeight: "56px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading && inputMessage.trim()) {
+                e.currentTarget.style.transform = "scale(1.1)";
+                e.currentTarget.style.boxShadow =
+                  "0 12px 40px rgba(0, 0, 0, 0.3)";
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "0 8px 32px rgba(0, 0, 0, 0.2)";
+            }}
+          >
+            {isLoading ? "⏳" : "💬"}
+          </button>
         </div>
       </div>
 
