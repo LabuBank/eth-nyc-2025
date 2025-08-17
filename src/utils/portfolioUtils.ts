@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseAbi } from "viem";
+import { createPublicClient, http, parseAbi, encodeFunctionData } from "viem";
 import { mainnet } from "viem/chains";
 import { PortfolioData, CachedPortfolio } from "../types";
 
@@ -163,7 +163,7 @@ export const generateSetNameCalldata = (
   tokenId: bigint,
   newName: string
 ): string => {
-  return publicClient.encodeFunctionData({
+  return encodeFunctionData({
     abi: nftAbi,
     functionName: "setMyLabuBankName",
     args: [tokenId, newName],
