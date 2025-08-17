@@ -83,153 +83,108 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Replace the old generate-session-token endpoint with this new one
-app.post("/api/session", async (req, res) => {
+// Add this new endpoint after the existing /api/session endpoint
+app.post('/api/generate-onramp-token', async (req, res) => {
   try {
-    // Get API credentials from environment variables
-    const keyName = process.env.CDP_API_KEY || process.env.CDP_API_KEY_NAME;
-    const keySecret =
-      process.env.CDP_API_SECRET || process.env.CDP_API_KEY_PRIVATE_KEY;
+    const { depositAddress } = req.body;
 
-    if (!keyName || !keySecret) {
-      console.error("Missing CDP API credentials");
-      return res.status(500).json({
-        error:
-          "Missing CDP API credentials. Please set CDP_API_KEY and CDP_API_SECRET environment variables.",
-      });
+    if (!depositAddress) {
+      return res.status(400).json({ error: 'depositAddress is required' });
     }
 
-    console.log("CDP API Key Name format check:", {
-      hasOrganizations: keyName.includes("organizations/"),
-      hasApiKeys: keyName.includes("/apiKeys/"),
-      keyNameLength: keyName.length,
+    console.log('Generating onramp token for deposit address:', depositAddress);
+
+    // Prepare the request data for the script
+    const requestData = JSON.stringify({
+      addresses: [{ address: depositAddress, blockchains: ['ethereum'] }],
+      assets: ['USDC']
     });
 
-    // Parse request body
-    const { addresses, assets } = req.body;
-
-    if (!addresses || addresses.length === 0) {
-      return res.status(400).json({
-        error: "Addresses parameter is required",
-      });
-    }
-
-    // Generate JWT for authentication using CDP SDK
-    let jwtToken;
-    console.log("keyName", keyName);
-    console.log("keySecret", keySecret);
-
-    try {
-      jwtToken = await generateJwt({
-        apiKeyId: keyName,
-        apiKeySecret: keySecret,
-        requestMethod: "POST",
-        requestHost: "api.developer.coinbase.com",
-        requestPath: "/onramp/v1/token",
-        expiresIn: 120,
-      });
-      console.log("JWT generated successfully");
-    } catch (error) {
-      console.error("JWT generation failed:", error);
-
-      // Provide more helpful error message
-      if (
-        error instanceof Error &&
-        error.message.includes("secretOrPrivateKey")
-      ) {
-        return res.status(500).json({
-          error: "Invalid private key format",
-          details:
-            "The CDP_API_SECRET should be your EC private key. If you have just the base64 content, ensure it's properly formatted.",
-          hint: "Your private key should either be in PEM format with BEGIN/END headers, or just the base64 content that will be wrapped automatically.",
-        });
-      }
-
-      return res.status(500).json({
-        error: "Failed to authenticate with CDP API",
-        details: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-
-    // Prepare request to Coinbase API
-    const cdpApiUrl = "https://api.developer.coinbase.com/onramp/v1/token";
-
-    const requestBody = {
-      addresses,
-      ...(assets && { assets }),
+    const keyData = {
+      "id": process.env.CDP_API_KEY_NAME,
+      "privateKey": process.env.CDP_API_KEY_PRIVATE_KEY
     };
 
-    console.log("Making request to CDP API:", {
-      url: cdpApiUrl,
-      addressCount: addresses.length,
-      hasAssets: !!assets,
-    });
+    // Import fs to write the file
+    const fs = await import('fs');
+    
+    // Write the key data to a file in the current directory (replace if exists)
+    const keyFilePath = './cdp_api_key.json';
+    fs.writeFileSync(keyFilePath, JSON.stringify(keyData, null, 2));
 
-    // Make request to Coinbase API
-    const response = await fetch(cdpApiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Bearer ${jwtToken}`,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Use child_process to execute the shell script
+    const { spawn } = await import('child_process');
 
-    const responseText = await response.text();
+    return new Promise((resolve, reject) => {
+      const scriptPath = './src/script/get_onramp_token.sh';
+      
+      const child = spawn('bash', [scriptPath, keyFilePath], {
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
 
-    if (!response.ok) {
-      console.error("CDP API error:", response.status, response.statusText);
-      console.error("Response body:", responseText);
+      // Send the JSON data via stdin instead of command line argument
+      child.stdin.write(requestData);
+      child.stdin.end();
 
-      // Try to parse error as JSON
-      let errorDetails;
-      try {
-        errorDetails = JSON.parse(responseText);
-      } catch {
-        errorDetails = responseText;
-      }
+      let stdout = '';
+      let stderr = '';
 
-      // Provide helpful error messages based on status code
-      if (response.status === 401) {
-        return res.status(401).json({
-          error: "Authentication failed",
-          details:
-            "Please verify your CDP API key and secret are correct. The API key should be in the format: organizations/{org_id}/apiKeys/{key_id}",
-          apiError: errorDetails,
+      child.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      child.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      child.on('close', (code) => {
+        if (code !== 0) {
+          console.error('Script execution failed:', stderr);
+          return res.status(500).json({
+            error: 'Failed to generate onramp token',
+            details: stderr
+          });
+        }
+
+        try {
+          // Extract JSON from the script output (skip status line)
+          const lines = stdout.trim().split('\n');
+          const jsonLine = lines.find(line => line.startsWith('{'));
+          
+          if (!jsonLine) {
+            throw new Error('No JSON found in output');
+          }
+          
+          const result = JSON.parse(jsonLine);
+          console.log('Onramp token generated successfully');
+          
+          res.json({
+            token: result.token,
+            channelId: result.channelId || result.channel_id
+          });
+        } catch (parseError) {
+          console.error('Failed to parse script output:', stdout);
+          res.status(500).json({
+            error: 'Invalid response from onramp token script',
+            details: stdout
+          });
+        }
+      });
+
+      child.on('error', (error) => {
+        console.error('Script execution error:', error);
+        res.status(500).json({
+          error: 'Failed to execute onramp token script',
+          details: error.message
         });
-      }
-
-      return res.status(response.status).json({
-        error: `CDP API error: ${response.status} ${response.statusText}`,
-        details: errorDetails,
       });
-    }
-
-    // Parse successful response
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (error) {
-      console.error("Failed to parse response:", responseText);
-      return res.status(500).json({
-        error: "Invalid response from CDP API",
-        details: responseText,
-      });
-    }
-
-    console.log("Successfully generated session token");
-
-    // Return the session token
-    res.json({
-      token: data.token,
-      channel_id: data.channelId || data.channel_id,
     });
+
   } catch (error) {
-    console.error("Error generating session token:", error);
+    console.error('Error in generate-onramp-token endpoint:', error);
     res.status(500).json({
-      error: "Failed to generate session token",
-      details: error instanceof Error ? error.message : "Unknown error",
+      error: 'Failed to generate onramp token',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });

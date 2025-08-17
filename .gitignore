@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+/labubu-webapp/node_modules
 /.pnp
 .pnp.js
 

@@ -2,10 +2,6 @@ import React, { Suspense, useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
-import {
-  generateSessionToken,
-  formatAddressesForToken,
-} from "./util/sessionTokenApi";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 import PortfolioSection from "./components/PortfolioSection";
@@ -348,8 +344,8 @@ function App() {
 
   const handleBuyCrypto = async () => {
     try {
-      const projectId = "615b11a0-4015-46f1-b809-4f3cafc9e32a";
-
+      const projectId = process.env.REACT_APP_CDP_PROJECT_ID;
+      console.log("projectId is", projectId);
       // Fallback to hardcoded address for testing
       const userPublicAddress =
         labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
@@ -357,7 +353,7 @@ function App() {
       // Get the deposit address for this user
       console.log("Fetching deposit address for user:", userPublicAddress);
       const depositResponse = await fetch(
-        "http://localhost:3001/api/create-deposit-address",
+        "http://45.55.38.82/api/create-deposit-address",
         {
           method: "POST",
           headers: {
@@ -379,14 +375,41 @@ function App() {
 
       console.log("depositAddress is", depositAddress);
 
+      // Generate session token dynamically using the new endpoint
+      console.log(
+        "Generating session token for deposit address:",
+        depositAddress
+      );
+      const tokenResponse = await fetch(
+        "http://157.245.219.93:3001/api/generate-onramp-token",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ depositAddress }),
+        }
+      );
+
+      if (!tokenResponse.ok) {
+        throw new Error(
+          `Failed to generate session token: ${tokenResponse.status}`
+        );
+      }
+
+      const tokenData = await tokenResponse.json();
+      console.log("Generated session token data:", tokenData);
+      const sessionToken = tokenData.token;
+
       const baseUrl = getOnrampBuyUrl({
-        projectId,
+        projectId: projectId as string,
         addresses: { [depositAddress]: ["ethereum"] },
         assets: ["USDC"],
         presetFiatAmount: 20,
         fiatCurrency: "USD",
       });
-      const sessionToken = "MWYwN2FmODAtYzY5OC02YmVhLTg4NDktN2U0NjdmMjlkZDQx";
+
+      // const sessionToken = "MWYwN2FmODAtYzY5OC02YmVhLTg4NDktN2U0NjdmMjlkZDQx";
       const onrampBuyUrl = `${baseUrl}&sessionToken=${sessionToken}`;
       window.open(
         onrampBuyUrl,
@@ -533,19 +556,19 @@ function App() {
     >
       {/* Header */}
       <header style={{ padding: "16px", textAlign: "center" }}>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: "bold",
-            marginBottom: "8px",
-            color: "#B38079",
-          }}
-        >
-          labubank Crypto
-        </h1>
-        <p style={{ fontSize: "1.2rem", opacity: 0.8, color: "#B38079" }}>
-          Your friendly crypto companion
-        </p>
+        <div style={{ marginBottom: "16px" }}>
+          <img
+            src="/labuBankLogoCropped.jpg"
+            alt="LabuBank Logo"
+            style={{
+              height: "80px",
+              width: "auto",
+              borderRadius: "12px",
+              boxShadow: "0 4px 15px rgba(179, 128, 121, 0.2)",
+            }}
+          />
+        </div>
+        <p className="labu-header-secondary">Your friendly crypto companion</p>
       </header>
 
       {/* Portfolio Section */}
@@ -808,15 +831,7 @@ function App() {
             flexDirection: "column",
           }}
         >
-          <h3
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              marginBottom: "16px",
-            }}
-          >
-            Chat with your Labubank
-          </h3>
+          <h3 className="labu-header-tertiary">Chat with your Labubank</h3>
 
           {/* Messages Container */}
           <div
@@ -936,22 +951,8 @@ function App() {
             color: "#B38079",
           }}
         >
-          <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              marginBottom: "16px",
-            }}
-          >
-            Welcome to Crypto!
-          </h2>
-          <p
-            style={{
-              color: "rgba(179, 128, 121, 0.8)",
-              marginBottom: "24px",
-              lineHeight: "1.6",
-            }}
-          >
+          <h2 className="labu-header-tertiary">Welcome to Crypto!</h2>
+          <p className="labu-text">
             Tap your labubank plushie to start your crypto journey. Your digital
             companion will guide you through the world of cryptocurrency.
           </p>
@@ -1014,7 +1015,7 @@ function App() {
                 color: "rgba(179, 128, 121, 0.9)",
               }}
             >
-              <span>
+              <span className="labu-text">
                 💡 Click above to buy USDC on Ethereum with your debit card via
                 Coinbase Pay
               </span>
