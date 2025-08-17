@@ -10,7 +10,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 function LabubankModel() {
-  const { scene } = useGLTF("/model.glb");
+  const { scene } = useGLTF("/labubank.glb");
   return <primitive object={scene} scale={3} />;
 }
 
