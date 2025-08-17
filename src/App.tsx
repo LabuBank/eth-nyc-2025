@@ -1012,31 +1012,8 @@ function App() {
                   maxLength={20}
                 />
 
-                <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                  <button
-                    className="button-tap"
-                    onClick={prevStep}
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: "16px",
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                      color: "white",
-                      border: "2px solid rgba(255, 255, 255, 0.3)",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                  >
-                    ← Back
-                  </button>
-
+                {/* Main action button */}
+                <div style={{ textAlign: "center", marginBottom: "16px" }}>
                   <button
                     className="button-tap mobile-button"
                     onClick={handleNameLabubank}
@@ -1053,7 +1030,7 @@ function App() {
                       opacity: isNaming || !newName.trim() || !labubankAddress ? 0.5 : 1,
                       transition: "all 0.3s ease",
                       boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
-                      display: "flex",
+                      display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -1076,6 +1053,33 @@ function App() {
                     ) : (
                       "✨ Name My LabuBank"
                     )}
+                  </button>
+                </div>
+
+                {/* Back button */}
+                <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                  <button
+                    className="button-tap"
+                    onClick={prevStep}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "12px",
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "normal",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                    }}
+                  >
+                    ← Back
                   </button>
                 </div>
 
@@ -1287,31 +1291,8 @@ function App() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                  <button
-                    className="button-tap"
-                    onClick={prevStep}
-                    style={{
-                      padding: "12px 24px",
-                      borderRadius: "16px",
-                      backgroundColor: "rgba(255, 255, 255, 0.2)",
-                      color: "white",
-                      border: "2px solid rgba(255, 255, 255, 0.3)",
-                      cursor: "pointer",
-                      fontSize: "16px",
-                      fontWeight: "bold",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
-                    }}
-                  >
-                    ← Back
-                  </button>
-
+                {/* Main action button */}
+                <div style={{ textAlign: "center", marginBottom: "16px" }}>
                   <button
                     className="button-tap mobile-button"
                     onClick={handleBuyCrypto}
@@ -1338,7 +1319,33 @@ function App() {
                   >
                     💳 Buy USDC with Debit Card
                   </button>
+                </div>
 
+                {/* Back button */}
+                <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                  <button
+                    className="button-tap"
+                    onClick={prevStep}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "12px",
+                      backgroundColor: "rgba(255, 255, 255, 0.2)",
+                      color: "white",
+                      border: "1px solid rgba(255, 255, 255, 0.3)",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "normal",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)";
+                    }}
+                  >
+                    ← Back
+                  </button>
                 </div>
 
                 {/* Skip option */}
