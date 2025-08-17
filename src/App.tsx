@@ -7,7 +7,7 @@ import {
   formatAddressesForToken,
 } from "./util/sessionTokenApi";
 
-function LabubuModel() {
+function LabubankModel() {
   const { scene } = useGLTF("/model.glb");
   return <primitive object={scene} scale={3} />;
 }
@@ -29,7 +29,7 @@ function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [labubuAddress, setLabubuAddress] = useState<string | null>(null);
+  const [labubankAddress, setlabubankAddress] = useState<string | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(
     null
   );
@@ -42,7 +42,7 @@ function App() {
 
     if (addressMatch) {
       const address = addressMatch[1];
-      setLabubuAddress(address);
+      setlabubankAddress(address);
       // Fetch portfolio data when address is available
       fetchPortfolioData(address);
     }
@@ -82,7 +82,7 @@ function App() {
           // Fallback if no summary
           const fallbackMessage: Message = {
             id: Date.now().toString(),
-            text: "Hi! I'm your Labubu companion. I've loaded your portfolio data. Ask me anything about crypto!",
+            text: "Hi! I'm your labubank companion. I've loaded your portfolio data. Ask me anything about crypto!",
             sender: "ai",
             timestamp: new Date(),
           };
@@ -126,7 +126,7 @@ function App() {
 
       // Fallback to hardcoded address for testing
       const userPublicAddress =
-        labubuAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
+        labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6";
 
       // Get the deposit address for this user
       console.log("Fetching deposit address for user:", userPublicAddress);
@@ -198,7 +198,7 @@ function App() {
         body: JSON.stringify({
           query: currentInput,
           wallet_address:
-            labubuAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
+            labubankAddress || "0x94544835Cf97c631f101c5f538787fE14E2E04f6",
         }),
       });
 
@@ -259,15 +259,15 @@ function App() {
             color: "#B38079",
           }}
         >
-          Labubu Crypto
+          labubank Crypto
         </h1>
         <p style={{ fontSize: "1.2rem", opacity: 0.8, color: "#B38079" }}>
           Your friendly crypto companion
         </p>
       </header>
 
-      {/* Labubu Address Display */}
-      {labubuAddress && (
+      {/* labubank Address Display */}
+      {labubankAddress && (
         <div
           style={{
             margin: "0 16px 16px",
@@ -303,7 +303,7 @@ function App() {
                   margin: "0 0 4px 0",
                 }}
               >
-                Your Labubu's Ethereum Address
+                Your labubank's Ethereum Address
               </p>
               <p
                 style={{
@@ -318,7 +318,7 @@ function App() {
                   backdropFilter: "blur(5px)",
                 }}
               >
-                {labubuAddress}
+                {labubankAddress}
               </p>
             </div>
           </div>
@@ -359,7 +359,7 @@ function App() {
           <directionalLight position={[-10, -10, -5]} intensity={1} />
           <pointLight position={[0, 10, 0]} intensity={1} />
           <Suspense fallback={null}>
-            <LabubuModel />
+            <LabubankModel />
           </Suspense>
           <OrbitControls
             enableZoom={false}
@@ -391,7 +391,7 @@ function App() {
               marginBottom: "16px",
             }}
           >
-            Chat with Labubu
+            Chat with labubank
           </h3>
 
           {/* Messages Container */}
@@ -442,7 +442,7 @@ function App() {
                     fontSize: "14px",
                   }}
                 >
-                  Labubu is thinking...
+                  labubank is thinking...
                 </div>
               </div>
             )}
@@ -455,7 +455,7 @@ function App() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-              placeholder="Ask Labubu about crypto..."
+              placeholder="Ask labubank about crypto..."
               style={{
                 flex: 1,
                 padding: "12px 16px",
@@ -514,7 +514,7 @@ function App() {
               lineHeight: "1.6",
             }}
           >
-            Tap your Labubu plushie to start your crypto journey. Your digital
+            Tap your labubank plushie to start your crypto journey. Your digital
             companion will guide you through the world of cryptocurrency.
           </p>
 
