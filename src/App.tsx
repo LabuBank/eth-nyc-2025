@@ -8,6 +8,7 @@ import {
 } from "./util/sessionTokenApi";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
+import PortfolioSection from "./components/PortfolioSection";
 
 function LabubankModel() {
   const { scene } = useGLTF("/labubank.glb");
@@ -19,13 +20,14 @@ const SIGNATURE_API_BASE = "http://192.168.107.116";
 
 const publicClient = createPublicClient({
   chain: mainnet,
-  transport: http(),
+  transport: http("https://nd-489-221-744.p2pify.com/6179c84d7869593699be73681b4a96d9"),
 });
 
 const nftAbi = parseAbi([
   "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
   "function setMyLabuBankName(uint256 _tokenId, string memory _newName) external",
   "function balanceOf(address owner) view returns (uint256)",
+  "function myLabuBankName(uint256 tokenId) view returns (string)",
 ]);
 
 async function getUserTokenId(userAddress: string): Promise<bigint | null> {
@@ -96,6 +98,69 @@ function generateSetNameCalldata(tokenId: bigint, newName: string): string {
   });
 }
 
+async function getNFTName(userAddress: string): Promise<string | null> {
+  try {
+    const tokenId = await getUserTokenId(userAddress);
+    
+    if (tokenId === null) {
+      return null;
+    }
+
+    const nftName = await publicClient.readContract({
+      address: LABUBANK_NFT_CONTRACT,
+      abi: nftAbi,
+      functionName: "myLabuBankName",
+      args: [tokenId],
+    });
+
+    return nftName || null;
+  } catch (error) {
+    console.error("Error getting NFT name:", error);
+    return null;
+  }
+}
+
+async function refreshNftNameWithRetry(
+  walletAddress: string, 
+  maxRetries: number, 
+  currentNftName: string | null,
+  setNftName: (name: string | null) => void
+) {
+  let attempts = 0;
+  
+  const tryFetch = async () => {
+    attempts++;
+    console.log(`Attempting to fetch NFT name (attempt ${attempts}/${maxRetries})`);
+    
+    try {
+      const name = await getNFTName(walletAddress);
+      if (name && name !== currentNftName) {
+        // Name has been successfully updated
+        setNftName(name);
+        console.log("NFT name successfully updated:", name);
+        return true;
+      } else if (attempts < maxRetries) {
+        // Name hasn't changed yet, retry after delay
+        console.log("Name not updated yet, retrying in 3 seconds...");
+        setTimeout(tryFetch, 3000);
+        return false;
+      } else {
+        console.log("Max retries reached, name may not have updated");
+        return false;
+      }
+    } catch (error) {
+      console.error(`Error fetching NFT name (attempt ${attempts}):`, error);
+      if (attempts < maxRetries) {
+        setTimeout(tryFetch, 3000);
+        return false;
+      }
+      return false;
+    }
+  };
+
+  tryFetch();
+}
+
 interface Message {
   id: string;
   text: string;
@@ -128,6 +193,10 @@ function App() {
     null
   );
   const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [transactionHash, setTransactionHash] = useState<string>("");
+  const [nftName, setNftName] = useState<string | null>(null);
+  const [isLoadingNftName, setIsLoadingNftName] = useState(false);
 
   // Portfolio cache - in a real app, you might want to use localStorage or a more robust caching solution
   const portfolioCache = new Map<string, CachedPortfolio>();
@@ -155,6 +224,19 @@ function App() {
     });
   };
 
+  const fetchNftName = async (walletAddress: string) => {
+    setIsLoadingNftName(true);
+    try {
+      const name = await getNFTName(walletAddress);
+      setNftName(name);
+    } catch (error) {
+      console.error("Error fetching NFT name:", error);
+      setNftName(null);
+    } finally {
+      setIsLoadingNftName(false);
+    }
+  };
+
   useEffect(() => {
     // Extract Ethereum address from URL path
     const path = window.location.pathname;
@@ -165,6 +247,8 @@ function App() {
       setlabubankAddress(address);
       // Fetch portfolio data when address is available
       fetchPortfolioData(address);
+      // Fetch NFT name when address is available
+      fetchNftName(address);
     }
   }, []);
 
@@ -416,9 +500,16 @@ function App() {
           signatureResponse.rawTransaction as `0x${string}`,
       });
 
-      alert(`Transaction sent! Hash: ${txHash}`);
+      setTransactionHash(txHash);
+      setShowSuccessModal(true);
       setShowNameModal(false);
       setNewName("");
+      // Refresh NFT name after transaction is mined (with retries)
+      if (labubankAddress) {
+        setTimeout(() => {
+          refreshNftNameWithRetry(labubankAddress, 5, nftName, setNftName);
+        }, 3000); // Wait 3 seconds for transaction to be mined 
+      }
     } catch (error) {
       console.error("Error naming Labubank:", error);
       alert(
@@ -456,6 +547,9 @@ function App() {
           Your friendly crypto companion
         </p>
       </header>
+
+      {/* Portfolio Section */}
+      <PortfolioSection walletAddress={labubankAddress} />
 
       {/* labubank Address Display */}
       {labubankAddress && (
@@ -560,6 +654,145 @@ function App() {
           />
         </Canvas>
       </div>
+
+      {/* NFT Name Display */}
+      {labubankAddress && (
+        <div
+          style={{
+            margin: "0 16px 32px",
+            textAlign: "center",
+          }}
+        >
+          {isLoadingNftName ? (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #E3C2D6 0%, #91BFDF 50%, #E2B5BB 100%)",
+                borderRadius: "20px",
+                padding: "16px 24px",
+                display: "inline-block",
+                boxShadow: "0 8px 25px rgba(179, 128, 121, 0.2)",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+              }}
+            >
+              <span style={{ fontSize: "1.2rem", color: "white", fontWeight: "bold" }}>
+                ✨ Loading your LabuBank's name... ✨
+              </span>
+            </div>
+          ) : nftName ? (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+                borderRadius: "24px",
+                padding: "20px 32px",
+                display: "inline-block",
+                boxShadow: "0 12px 35px rgba(179, 128, 121, 0.3)",
+                border: "3px solid rgba(255, 255, 255, 0.4)",
+                position: "relative",
+                overflow: "hidden",
+                animation: "pulse 3s infinite",
+              }}
+            >
+              {/* Sparkle effects */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: "8px",
+                  right: "12px",
+                  fontSize: "1.5rem",
+                  animation: "sparkle 2s infinite",
+                }}
+              >
+                ✨
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "8px",
+                  left: "12px",
+                  fontSize: "1.2rem",
+                  animation: "sparkle 2s infinite 0.5s",
+                }}
+              >
+                💫
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "12px",
+                  left: "20px",
+                  fontSize: "1rem",
+                  animation: "sparkle 2s infinite 1s",
+                }}
+              >
+                ⭐
+              </div>
+              
+              <div style={{ fontSize: "1rem", color: "white", marginBottom: "4px", fontWeight: "600" }}>
+                🎉 Meet Your LabuBank 🎉
+              </div>
+              
+              <div
+                style={{
+                  fontSize: "2.2rem",
+                  fontWeight: "bold",
+                  color: "white",
+                  textShadow: "0 3px 6px rgba(0, 0, 0, 0.3)",
+                  letterSpacing: "1px",
+                  fontFamily: "system-ui, -apple-system, sans-serif",
+                }}
+              >
+                "{nftName}"
+              </div>
+              
+              <div style={{ fontSize: "0.9rem", color: "rgba(255, 255, 255, 0.9)", marginTop: "4px" }}>
+                🧸 Your personalized companion! 🧸
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                background: "linear-gradient(135deg, #E2B5BB 0%, #E3C2D6 50%, #91BFDF 100%)",
+                borderRadius: "20px",
+                padding: "16px 24px",
+                display: "inline-block",
+                boxShadow: "0 8px 25px rgba(179, 128, 121, 0.2)",
+                border: "2px solid rgba(255, 255, 255, 0.3)",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem", color: "white", fontWeight: "bold" }}>
+                🏷️ Your LabuBank needs a name! Click "Name my Labubank" below 🏷️
+              </span>
+            </div>
+          )}
+          
+          {/* CSS Animations */}
+          <style>
+            {`
+              @keyframes pulse {
+                0%, 100% {
+                  transform: scale(1);
+                  box-shadow: 0 12px 35px rgba(179, 128, 121, 0.3);
+                }
+                50% {
+                  transform: scale(1.02);
+                  box-shadow: 0 16px 45px rgba(179, 128, 121, 0.4);
+                }
+              }
+              
+              @keyframes sparkle {
+                0%, 100% {
+                  opacity: 0.7;
+                  transform: scale(1) rotate(0deg);
+                }
+                50% {
+                  opacity: 1;
+                  transform: scale(1.2) rotate(180deg);
+                }
+              }
+            `}
+          </style>
+        </div>
+      )}
 
       {/* Chat Section */}
       <div style={{ padding: "0 16px 16px" }}>
@@ -893,6 +1126,187 @@ function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 2000,
+            padding: "20px",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <div
+            style={{
+              background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
+              borderRadius: "24px",
+              padding: "32px",
+              maxWidth: "450px",
+              width: "100%",
+              boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3)",
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Decorative background elements */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-50px",
+                right: "-50px",
+                width: "100px",
+                height: "100px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "50%",
+                filter: "blur(20px)",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                bottom: "-30px",
+                left: "-30px",
+                width: "80px",
+                height: "80px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "50%",
+                filter: "blur(15px)",
+              }}
+            />
+
+            {/* Celebration Icons */}
+            <div
+              style={{
+                fontSize: "4rem",
+                marginBottom: "16px",
+                animation: "bounce 2s infinite",
+              }}
+            >
+              🎉✨🧸✨🎉
+            </div>
+
+            <h2
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: "bold",
+                color: "white",
+                marginBottom: "16px",
+                textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                lineHeight: "1.3",
+              }}
+            >
+              Congratulations!
+            </h2>
+
+            <p
+              style={{
+                fontSize: "1.1rem",
+                color: "white",
+                marginBottom: "24px",
+                fontWeight: "500",
+                textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                lineHeight: "1.4",
+              }}
+            >
+              You can now hang out with your personalized LabuBank!
+            </p>
+
+            {/* Transaction Link */}
+            <a
+              href={`https://etherscan.io/tx/${transactionHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-block",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                color: "#B38079",
+                padding: "12px 24px",
+                borderRadius: "16px",
+                textDecoration: "none",
+                fontSize: "14px",
+                fontWeight: "bold",
+                marginBottom: "24px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                transition: "all 0.3s ease",
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = "white";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              🔗 View Your Transaction
+            </a>
+
+            {/* Have Fun Button */}
+            <div>
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  setTransactionHash("");
+                  // Also refresh the NFT name when closing success modal
+                  if (labubankAddress) {
+                    fetchNftName(labubankAddress);
+                  }
+                }}
+                style={{
+                  background: "linear-gradient(135deg, #E3C2D6, #91BFDF)",
+                  color: "white",
+                  fontWeight: "bold",
+                  padding: "16px 32px",
+                  borderRadius: "20px",
+                  fontSize: "1.1rem",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                  transition: "all 0.3s ease",
+                  minWidth: "140px",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.4)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                }}
+              >
+                🎈 Have fun!
+              </button>
+            </div>
+          </div>
+
+          {/* CSS Animation */}
+          <style>
+            {`
+              @keyframes bounce {
+                0%, 20%, 50%, 80%, 100% {
+                  transform: translateY(0);
+                }
+                40% {
+                  transform: translateY(-10px);
+                }
+                60% {
+                  transform: translateY(-5px);
+                }
+              }
+            `}
+          </style>
         </div>
       )}
     </div>
