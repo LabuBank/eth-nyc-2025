@@ -2,10 +2,6 @@ import React, { Suspense, useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import { getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
-import {
-  generateSessionToken,
-  formatAddressesForToken,
-} from "./util/sessionTokenApi";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 
