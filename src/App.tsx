@@ -5,6 +5,9 @@ import { getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 import PortfolioSection from "./components/PortfolioSection";
+import LiquidGlass from "liquid-glass-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function LabubankModel() {
   const { scene } = useGLTF("/labubank.glb");
@@ -655,35 +658,7 @@ function App() {
         </div>
       )}
 
-      {/* 3D Model Container */}
-      <div
-        style={{
-          height: "400px",
-          margin: "0 16px 32px",
-          backgroundColor: "rgba(227, 211, 228, 0.3)",
-          borderRadius: "24px",
-          backdropFilter: "blur(10px)",
-          border: "1px solid rgba(227, 194, 214, 0.4)",
-        }}
-      >
-        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-          <ambientLight intensity={1.2} />
-          <directionalLight position={[10, 10, 5]} intensity={2} />
-          <directionalLight position={[-10, -10, -5]} intensity={1} />
-          <pointLight position={[0, 10, 0]} intensity={1} />
-          <Suspense fallback={null}>
-            <LabubankModel />
-          </Suspense>
-          <OrbitControls
-            enableZoom={false}
-            enablePan={false}
-            autoRotate={true}
-            autoRotateSpeed={2}
-          />
-        </Canvas>
-      </div>
-
-      {/* NFT Name Display */}
+      {/* NFT Name Display - Moved Above 3D Model */}
       {labubankAddress && (
         <div
           style={{
@@ -861,83 +836,298 @@ function App() {
         </div>
       )}
 
-      {/* Chat Messages Overlay */}
-      <div style={{ position: "relative", pointerEvents: "none" }}>
-        {messages.map((message) => (
+      {/* 3D Model Container */}
+      <div
+        style={{
+          height: "400px",
+          margin: "0 16px 32px",
+          backgroundColor: "rgba(227, 211, 228, 0.3)",
+          borderRadius: "24px",
+          backdropFilter: "blur(10px)",
+          border: "1px solid rgba(227, 194, 214, 0.4)",
+        }}
+      >
+        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+          <ambientLight intensity={1.2} />
+          <directionalLight position={[10, 10, 5]} intensity={2} />
+          <directionalLight position={[-10, -10, -5]} intensity={1} />
+          <pointLight position={[0, 10, 0]} intensity={1} />
+          <Suspense fallback={null}>
+            <LabubankModel />
+          </Suspense>
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            autoRotate={true}
+            autoRotateSpeed={2}
+          />
+        </Canvas>
+      </div>
+
+      {/* Comic-Style Message Box - Below 3D Model */}
+      <div
+        style={{
+          margin: "0 16px 32px",
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            maxWidth: "600px",
+            width: "100%",
+          }}
+        >
+          {/* Message Box with Tail */}
           <div
-            key={message.id}
             style={{
-              position: "absolute",
-              left: "60%",
-              top: message.sender === "user" ? "20%" : "30%",
-              maxWidth: "300px",
-              pointerEvents: "none",
-              zIndex: 10,
+              backgroundColor: "rgba(255, 255, 255, 0.95)",
+              borderRadius: "20px",
+              padding: "20px 24px",
+              boxShadow: "0 8px 25px rgba(179, 128, 121, 0.2)",
+              border: "3px solid rgba(179, 128, 121, 0.3)",
+              position: "relative",
+              minHeight: "80px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {message.sender === "ai" && (
+            {/* Speech Bubble Tail */}
+            <div
+              style={{
+                position: "absolute",
+                top: "-15px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "15px solid transparent",
+                borderRight: "15px solid transparent",
+                borderBottom: "15px solid rgba(255, 255, 255, 0.95)",
+                filter: "drop-shadow(0 -2px 4px rgba(179, 128, 121, 0.2))",
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                top: "-18px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 0,
+                height: 0,
+                borderLeft: "18px solid transparent",
+                borderRight: "18px solid transparent",
+                borderBottom: "18px solid rgba(179, 128, 121, 0.3)",
+                zIndex: -1,
+              }}
+            />
+
+            {/* Message Content */}
+            {messages.length === 0 ? (
               <div
                 style={{
-                  padding: "16px 20px",
-                  borderRadius: "24px",
-                  background: "rgba(255, 255, 255, 0.15)",
-                  backdropFilter: "blur(20px)",
-                  WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  color: "white",
-                  fontSize: "14px",
-                  lineHeight: "1.6",
-                  textAlign: "left",
-                  overflowWrap: "break-word",
-                  wordWrap: "break-word",
-                  whiteSpace: "pre-wrap",
-                  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                  textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                  animation: "messageSlideIn 0.5s ease-out",
+                  color: "#B38079",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  fontStyle: "italic",
                 }}
               >
-                {message.text}
+                💬 Ask LabuBank anything about crypto!
+              </div>
+            ) : messages[messages.length - 1]?.sender === "ai" ? (
+              <div
+                style={{
+                  color: "#B38079",
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  width: "100%",
+                }}
+              >
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => (
+                      <div style={{ margin: "0 0 8px 0" }}>{children}</div>
+                    ),
+                    h1: ({ children }) => (
+                      <h1
+                        style={{
+                          fontSize: "18px",
+                          fontWeight: "bold",
+                          margin: "0 0 8px 0",
+                        }}
+                      >
+                        {children}
+                      </h1>
+                    ),
+                    h2: ({ children }) => (
+                      <h2
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: "bold",
+                          margin: "0 0 8px 0",
+                        }}
+                      >
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: "bold",
+                          margin: "0 0 8px 0",
+                        }}
+                      >
+                        {children}
+                      </h3>
+                    ),
+                    ul: ({ children }) => (
+                      <ul style={{ margin: "8px 0", paddingLeft: "20px" }}>
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol style={{ margin: "8px 0", paddingLeft: "20px" }}>
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => (
+                      <li style={{ margin: "4px 0" }}>{children}</li>
+                    ),
+                    code: ({ children, className }) => {
+                      const isInline =
+                        !className || !className.includes("language-");
+                      return isInline ? (
+                        <code
+                          style={{
+                            backgroundColor: "rgba(179, 128, 121, 0.1)",
+                            padding: "2px 6px",
+                            borderRadius: "4px",
+                            fontFamily: "monospace",
+                            fontSize: "13px",
+                          }}
+                        >
+                          {children}
+                        </code>
+                      ) : (
+                        <pre
+                          style={{
+                            backgroundColor: "rgba(179, 128, 121, 0.1)",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            overflow: "auto",
+                            margin: "8px 0",
+                          }}
+                        >
+                          <code>{children}</code>
+                        </pre>
+                      );
+                    },
+                    blockquote: ({ children }) => (
+                      <blockquote
+                        style={{
+                          borderLeft: "3px solid rgba(179, 128, 121, 0.3)",
+                          paddingLeft: "12px",
+                          margin: "8px 0",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {children}
+                      </blockquote>
+                    ),
+                    strong: ({ children }) => (
+                      <strong style={{ fontWeight: "bold" }}>{children}</strong>
+                    ),
+                    em: ({ children }) => (
+                      <em style={{ fontStyle: "italic" }}>{children}</em>
+                    ),
+                  }}
+                >
+                  {messages[messages.length - 1].text}
+                </ReactMarkdown>
+              </div>
+            ) : isLoading ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  color: "#B38079",
+                  fontSize: "16px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "2px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "#B38079",
+                      animation: "typingDot 1.4s infinite ease-in-out",
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "#B38079",
+                      animation: "typingDot 1.4s infinite ease-in-out 0.2s",
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: "8px",
+                      height: "8px",
+                      borderRadius: "50%",
+                      backgroundColor: "#B38079",
+                      animation: "typingDot 1.4s infinite ease-in-out 0.4s",
+                    }}
+                  />
+                </div>
+                <span>LabuBank is typing...</span>
+              </div>
+            ) : (
+              <div
+                style={{
+                  color: "#B38079",
+                  fontSize: "16px",
+                  textAlign: "center",
+                  fontStyle: "italic",
+                }}
+              >
+                💬 Ask LabuBank anything about crypto!
               </div>
             )}
           </div>
-        ))}
-        {isLoading && (
-          <div
-            style={{
-              position: "absolute",
-              left: "60%",
-              top: "40%",
-              maxWidth: "300px",
-              pointerEvents: "none",
-              zIndex: 10,
-            }}
-          >
-            <div
-              style={{
-                padding: "16px 20px",
-                borderRadius: "24px",
-                background: "rgba(255, 255, 255, 0.15)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                color: "white",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-                textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
-                animation: "messageSlideIn 0.5s ease-out",
-              }}
-            >
-              <span style={{ fontSize: "16px" }}>⏳</span>
-              labubank is thinking...
-            </div>
-          </div>
-        )}
+
+          {/* CSS Animations for Typing Effect */}
+          <style>
+            {`
+              @keyframes typingDot {
+                0%, 60%, 100% {
+                  transform: translateY(0);
+                  opacity: 0.4;
+                }
+                30% {
+                  transform: translateY(-10px);
+                  opacity: 1;
+                }
+              }
+            `}
+          </style>
+        </div>
       </div>
 
-      {/* Chat Bar */}
+      {/* Fixed Chat Bar */}
       <div
         style={{
           position: "fixed",
@@ -958,7 +1148,7 @@ function App() {
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-            placeholder="Ask labubank about crypto..."
+            placeholder="Ask LabuBank about crypto..."
             style={{
               flex: 1,
               padding: "16px 20px",
