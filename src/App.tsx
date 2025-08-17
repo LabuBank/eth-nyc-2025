@@ -203,6 +203,13 @@ function App() {
   const [isListeningForTransfer, setIsListeningForTransfer] = useState(false);
   const [pyUSDTransferDetected, setPyUSDTransferDetected] = useState(false);
   const [transferEventListener, setTransferEventListener] = useState<any>(null);
+  
+  // Step 2 naming completion state
+  const [isNamingComplete, setIsNamingComplete] = useState(false);
+  const [completedNftName, setCompletedNftName] = useState<string>("");
+  
+  // Step 3 onramp completion state
+  const [isOnrampComplete, setIsOnrampComplete] = useState(false);
 
   // Portfolio cache
   const portfolioCache = new Map<string, CachedPortfolio>();
@@ -254,6 +261,11 @@ function App() {
       setTransferEventListener(null);
     }
   };
+  
+  const continueFromNaming = () => {
+    setIsNamingComplete(false);
+    nextStep();
+  };
 
   // pyUSD Transfer Event Listener
   const startTransferListener = async () => {
@@ -273,10 +285,11 @@ function App() {
           console.log('pyUSD Transfer detected!', logs);
           setPyUSDTransferDetected(true);
           setIsListeningForTransfer(false);
-          // Auto-advance or show completion message
+          // Trigger onramp completion after brief celebration
           setTimeout(() => {
             setPyUSDTransferDetected(false);
-          }, 5000);
+            setIsOnrampComplete(true);
+          }, 3000);
         },
       });
       
@@ -559,6 +572,7 @@ function App() {
         serializedTransaction: signatureResponse.rawTransaction as `0x${string}`,
       });
 
+      setCompletedNftName(newName);
       setNewName("");
       if (labubankAddress) {
         setTimeout(() => {
@@ -566,9 +580,9 @@ function App() {
         }, 3000);
       }
       
-      // Show success and advance to next step after a brief delay
+      // Show completion state instead of advancing directly
       setTimeout(() => {
-        nextStep();
+        setIsNamingComplete(true);
       }, 2000);
       
     } catch (error) {
@@ -716,6 +730,76 @@ function App() {
             }
           }
           
+          @keyframes superBounce {
+            0%, 20%, 50%, 80%, 100% {
+              transform: translateY(0) scale(1);
+            }
+            10% {
+              transform: translateY(-20px) scale(1.1);
+            }
+            40% {
+              transform: translateY(-15px) scale(1.05);
+            }
+            60% {
+              transform: translateY(-10px) scale(1.08);
+            }
+          }
+          
+          @keyframes wiggle {
+            0%, 50%, 100% {
+              transform: rotate(0deg);
+            }
+            25% {
+              transform: rotate(10deg) scale(1.1);
+            }
+            75% {
+              transform: rotate(-10deg) scale(1.1);
+            }
+          }
+          
+          @keyframes rainbow {
+            0% { filter: hue-rotate(0deg) brightness(1.2); }
+            25% { filter: hue-rotate(90deg) brightness(1.4); }
+            50% { filter: hue-rotate(180deg) brightness(1.6); }
+            75% { filter: hue-rotate(270deg) brightness(1.4); }
+            100% { filter: hue-rotate(360deg) brightness(1.2); }
+          }
+          
+          @keyframes float {
+            0%, 100% {
+              transform: translateY(0px) rotate(0deg);
+            }
+            33% {
+              transform: translateY(-8px) rotate(5deg);
+            }
+            66% {
+              transform: translateY(-4px) rotate(-3deg);
+            }
+          }
+          
+          @keyframes partyTime {
+            0% {
+              transform: scale(1) rotate(0deg);
+              filter: hue-rotate(0deg) brightness(1);
+            }
+            25% {
+              transform: scale(1.3) rotate(90deg);
+              filter: hue-rotate(90deg) brightness(1.5);
+            }
+            50% {
+              transform: scale(0.8) rotate(180deg);
+              filter: hue-rotate(180deg) brightness(1.8);
+            }
+            75% {
+              transform: scale(1.2) rotate(270deg);
+              filter: hue-rotate(270deg) brightness(1.3);
+            }
+            100% {
+              transform: scale(1) rotate(360deg);
+              filter: hue-rotate(360deg) brightness(1);
+            }
+          }
+          
           .button-tap {
             transition: all 0.15s ease-in-out;
           }
@@ -745,6 +829,7 @@ function App() {
       {/* Onboarding Modal */}
       {showOnboarding && (
         <div
+          onClick={completeOnboarding}
           style={{
             position: "fixed",
             top: 0,
@@ -762,6 +847,7 @@ function App() {
         >
           <div
             className="mobile-modal"
+            onClick={(e) => e.stopPropagation()}
             style={{
               background: "linear-gradient(135deg, #91BFDF 0%, #E3C2D6 50%, #E2B5BB 100%)",
               borderRadius: "24px",
@@ -799,10 +885,14 @@ function App() {
                   style={{
                     fontSize: "4rem",
                     marginBottom: "20px",
-                    animation: "bounce 2s infinite",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "10px",
                   }}
                 >
-                  🧸✨
+                  <span style={{ animation: "superBounce 2s infinite, rainbow 3s infinite" }}>🧸</span>
+                  <span style={{ animation: "sparkle 1.5s infinite, wiggle 2.5s infinite" }}>✨</span>
+                  <span style={{ animation: "float 2.8s infinite, partyTime 4s infinite" }}>🎉</span>
                 </div>
                 <h2
                   style={{
@@ -860,16 +950,20 @@ function App() {
             )}
 
             {/* Step 2: Name Your LabuBank */}
-            {currentStep === 2 && (
+            {currentStep === 2 && !isNamingComplete && (
               <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out" }}>
                 <div
                   style={{
                     fontSize: "3rem",
                     marginBottom: "20px",
-                    animation: "pulse 2s infinite",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "15px",
                   }}
                 >
-                  🏷️✨
+                  <span style={{ animation: "wiggle 2s infinite, rainbow 4s infinite" }}>🏷️</span>
+                  <span style={{ animation: "sparkle 1.8s infinite, superBounce 3s infinite" }}>✨</span>
+                  <span style={{ animation: "float 2.5s infinite, partyTime 3.5s infinite" }}>🎨</span>
                 </div>
                 <h2
                   style={{
@@ -896,22 +990,6 @@ function App() {
                 >
                   They will guide you through your new financial journey
                 </p>
-
-                {nftName && (
-                  <div
-                    style={{
-                      backgroundColor: "rgba(76, 175, 80, 0.9)",
-                      color: "white",
-                      padding: "12px 20px",
-                      borderRadius: "12px",
-                      marginBottom: "20px",
-                      fontWeight: "bold",
-                      animation: "celebration 1s ease-in-out",
-                    }}
-                  >
-                    ✅ Named "{nftName}" successfully!
-                  </div>
-                )}
 
                 <input
                   type="text"
@@ -1001,6 +1079,36 @@ function App() {
                   </button>
                 </div>
 
+                {/* Skip option */}
+                <div style={{ textAlign: "center", marginTop: "16px" }}>
+                  <button
+                    className="button-tap"
+                    onClick={nextStep}
+                    style={{
+                      background: "transparent",
+                      color: "rgba(255, 255, 255, 0.6)",
+                      fontWeight: "normal",
+                      padding: "8px 16px",
+                      borderRadius: "12px",
+                      fontSize: "14px",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      textDecoration: "underline",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    skip
+                  </button>
+                </div>
+
                 {!labubankAddress && (
                   <p
                     className="mobile-text"
@@ -1017,17 +1125,103 @@ function App() {
               </div>
             )}
 
+            {/* Step 2: Naming Completion State */}
+            {currentStep === 2 && isNamingComplete && (
+              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out" }}>
+                <div
+                  style={{
+                    fontSize: "4rem",
+                    marginBottom: "20px",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <span style={{ animation: "partyTime 1.5s infinite, superBounce 2s infinite" }}>🎉</span>
+                  <span style={{ animation: "sparkle 1.2s infinite, wiggle 2.8s infinite" }}>✨</span>
+                  <span style={{ animation: "rainbow 2s infinite, float 3s infinite" }}>🧸</span>
+                  <span style={{ animation: "sparkle 1.8s infinite, partyTime 2.5s infinite" }}>✨</span>
+                  <span style={{ animation: "superBounce 1.8s infinite, rainbow 3.5s infinite" }}>🎉</span>
+                  <div style={{ 
+                    position: "absolute", 
+                    fontSize: "2rem", 
+                    marginTop: "-10px",
+                    animation: "float 2.2s infinite, sparkle 1.5s infinite"
+                  }}>
+                    🌟⭐💫
+                  </div>
+                </div>
+                <h2
+                  style={{
+                    fontSize: window.innerWidth < 768 ? "1.6rem" : "2rem",
+                    fontWeight: "bold",
+                    color: "white",
+                    marginBottom: "16px",
+                    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                    lineHeight: "1.3",
+                  }}
+                >
+                  You named "{completedNftName}" successfully!
+                </h2>
+                <p
+                  className="mobile-text"
+                  style={{
+                    fontSize: "1.2rem",
+                    color: "white",
+                    marginBottom: "32px",
+                    fontWeight: "500",
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  You are now ready to go onto the next step
+                </p>
+                <button
+                  className="button-tap mobile-button"
+                  onClick={continueFromNaming}
+                  style={{
+                    background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                    color: "white",
+                    fontWeight: "bold",
+                    padding: "16px 32px",
+                    borderRadius: "20px",
+                    fontSize: "1.1rem",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                    transition: "all 0.3s ease",
+                    minWidth: "200px",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = "translateY(-3px)";
+                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.4)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                  }}
+                >
+                  🚀 Continue
+                </button>
+              </div>
+            )}
+
             {/* Step 3: Coinbase Onramp */}
-            {currentStep === 3 && (
+            {currentStep === 3 && !isOnrampComplete && (
               <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out" }}>
                 <div
                   style={{
                     fontSize: "3rem",
                     marginBottom: "20px",
-                    animation: "rotate 3s infinite linear",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "12px",
                   }}
                 >
-                  💳🌟
+                  <span style={{ animation: "rotate 3s infinite linear, rainbow 4s infinite" }}>💳</span>
+                  <span style={{ animation: "sparkle 1.5s infinite, superBounce 2.5s infinite" }}>🌟</span>
+                  <span style={{ animation: "wiggle 2.2s infinite, partyTime 3.8s infinite" }}>💰</span>
                 </div>
                 <h2
                   style={{
@@ -1058,7 +1252,7 @@ function App() {
                 {pyUSDTransferDetected && (
                   <div
                     style={{
-                      backgroundColor: "rgba(76, 175, 80, 0.9)",
+                      background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
                       color: "white",
                       padding: "16px",
                       borderRadius: "12px",
@@ -1066,6 +1260,7 @@ function App() {
                       fontWeight: "bold",
                       fontSize: "1.1rem",
                       animation: "celebration 1s ease-in-out",
+                      boxShadow: "0 8px 25px rgba(179, 128, 121, 0.3)",
                     }}
                   >
                     🎉 pyUSD Transfer Detected! Welcome to DeFi! 🎉
@@ -1144,31 +1339,198 @@ function App() {
                     💳 Buy USDC with Debit Card
                   </button>
 
+                </div>
+
+                {/* Skip option */}
+                <div style={{ textAlign: "center", marginTop: "16px" }}>
                   <button
-                    className="button-tap mobile-button"
-                    onClick={completeOnboarding}
+                    className="button-tap"
+                    onClick={() => setIsOnrampComplete(true)}
                     style={{
-                      background: "linear-gradient(135deg, #4CAF50, #45a049)",
-                      color: "white",
-                      fontWeight: "bold",
-                      padding: "16px 32px",
-                      borderRadius: "16px",
-                      fontSize: "16px",
+                      background: "transparent",
+                      color: "rgba(255, 255, 255, 0.6)",
+                      fontWeight: "normal",
+                      padding: "8px 16px",
+                      borderRadius: "12px",
+                      fontSize: "14px",
                       border: "none",
                       cursor: "pointer",
                       transition: "all 0.3s ease",
-                      boxShadow: "0 6px 20px rgba(0, 0, 0, 0.3)",
+                      textDecoration: "underline",
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-3px)";
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.4)";
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
                     }}
                     onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
+                      e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
-                    🎉 Complete Setup!
+                    skip
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Onramp Completion Final Celebration */}
+            {currentStep === 3 && isOnrampComplete && (
+              <div style={{ textAlign: "center", animation: "fadeIn 0.5s ease-in-out" }}>
+                <div
+                  style={{
+                    fontSize: "5rem",
+                    marginBottom: "20px",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "5px",
+                    flexWrap: "wrap",
+                    position: "relative",
+                  }}
+                >
+                  <span style={{ animation: "partyTime 1s infinite, superBounce 2s infinite" }}>🎊</span>
+                  <span style={{ animation: "sparkle 0.8s infinite, rainbow 2.5s infinite" }}>✨</span>
+                  <span style={{ animation: "superBounce 1.5s infinite, rainbow 3s infinite, wiggle 2s infinite" }}>🧸</span>
+                  <span style={{ animation: "sparkle 1.2s infinite, partyTime 2.8s infinite" }}>✨</span>
+                  <span style={{ animation: "partyTime 1.3s infinite, float 2.2s infinite" }}>🎊</span>
+                  
+                  {/* Floating celebration emojis */}
+                  <div style={{ 
+                    position: "absolute", 
+                    top: "-30px", 
+                    left: "10%",
+                    fontSize: "2.5rem",
+                    animation: "float 2s infinite, sparkle 1.8s infinite"
+                  }}>🎉</div>
+                  <div style={{ 
+                    position: "absolute", 
+                    top: "-25px", 
+                    right: "15%",
+                    fontSize: "2rem",
+                    animation: "wiggle 2.5s infinite, rainbow 3.2s infinite"
+                  }}>🌟</div>
+                  <div style={{ 
+                    position: "absolute", 
+                    bottom: "-40px", 
+                    left: "20%",
+                    fontSize: "1.8rem",
+                    animation: "superBounce 1.8s infinite, partyTime 2.5s infinite"
+                  }}>⭐</div>
+                  <div style={{ 
+                    position: "absolute", 
+                    bottom: "-35px", 
+                    right: "25%",
+                    fontSize: "2.2rem",
+                    animation: "float 2.3s infinite, rainbow 2.8s infinite"
+                  }}>💫</div>
+                  <div style={{ 
+                    position: "absolute", 
+                    top: "20px", 
+                    left: "5%",
+                    fontSize: "1.5rem",
+                    animation: "sparkle 1.5s infinite, wiggle 3s infinite"
+                  }}>🎆</div>
+                  <div style={{ 
+                    position: "absolute", 
+                    top: "15px", 
+                    right: "8%",
+                    fontSize: "1.8rem",
+                    animation: "partyTime 2s infinite, superBounce 2.8s infinite"
+                  }}>🥳</div>
+                </div>
+                <h2
+                  style={{
+                    fontSize: window.innerWidth < 768 ? "1.6rem" : "2.2rem",
+                    fontWeight: "bold",
+                    color: "white",
+                    marginBottom: "16px",
+                    textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)",
+                    lineHeight: "1.3",
+                  }}
+                >
+                  You are now all set up!
+                </h2>
+                <p
+                  className="mobile-text"
+                  style={{
+                    fontSize: "1.3rem",
+                    color: "white",
+                    marginBottom: "16px",
+                    fontWeight: "500",
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  Welcome to the world of on-chain finance.
+                </p>
+                <p
+                  className="mobile-text"
+                  style={{
+                    fontSize: "1.2rem",
+                    color: "white",
+                    marginBottom: "32px",
+                    fontWeight: "500",
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.2)",
+                    lineHeight: "1.5",
+                  }}
+                >
+                  {completedNftName || nftName || "Your LabuBank"} is now your crypto companion and best friend! 🧸💫
+                </p>
+                <button
+                  className="button-tap mobile-button"
+                  onClick={completeOnboarding}
+                  style={{
+                    background: "linear-gradient(135deg, #91BFDF, #E3C2D6, #E2B5BB)",
+                    color: "white",
+                    fontWeight: "bold",
+                    padding: "20px 40px",
+                    borderRadius: "25px",
+                    fontSize: "1.2rem",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 8px 30px rgba(0, 0, 0, 0.3)",
+                    transition: "all 0.3s ease",
+                    minWidth: "250px",
+                    animation: "pulse 3s infinite",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = "translateY(-5px) scale(1.05)";
+                    e.currentTarget.style.boxShadow = "0 12px 35px rgba(0, 0, 0, 0.4)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = "translateY(0) scale(1)";
+                    e.currentTarget.style.boxShadow = "0 8px 30px rgba(0, 0, 0, 0.3)";
+                  }}
+                >
+                  🎉 Enter Your Crypto Journey!
+                </button>
+
+                {/* Back button */}
+                <div style={{ textAlign: "center", marginTop: "16px" }}>
+                  <button
+                    className="button-tap"
+                    onClick={() => setIsOnrampComplete(false)}
+                    style={{
+                      background: "transparent",
+                      color: "rgba(255, 255, 255, 0.6)",
+                      fontWeight: "normal",
+                      padding: "8px 16px",
+                      borderRadius: "12px",
+                      fontSize: "14px",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      textDecoration: "underline",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+                      e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    ← back
                   </button>
                 </div>
               </div>
@@ -1224,6 +1586,8 @@ function App() {
               style={{
                 fontSize: "1.5rem",
                 filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                animation: "float 3s infinite, rainbow 5s infinite",
+                display: "inline-block",
               }}
             >
               🧸
@@ -1344,14 +1708,14 @@ function App() {
                 animation: "pulse 3s infinite",
               }}
             >
-              {/* Sparkle effects */}
+              {/* Enhanced sparkle effects */}
               <div
                 style={{
                   position: "absolute",
                   top: "8px",
                   right: "12px",
                   fontSize: "1.5rem",
-                  animation: "sparkle 2s infinite",
+                  animation: "sparkle 2s infinite, rainbow 3s infinite",
                 }}
               >
                 ✨
@@ -1362,7 +1726,7 @@ function App() {
                   bottom: "8px",
                   left: "12px",
                   fontSize: "1.2rem",
-                  animation: "sparkle 2s infinite 0.5s",
+                  animation: "float 2.5s infinite, partyTime 3.5s infinite",
                 }}
               >
                 💫
@@ -1373,10 +1737,43 @@ function App() {
                   top: "12px",
                   left: "20px",
                   fontSize: "1rem",
-                  animation: "sparkle 2s infinite 1s",
+                  animation: "superBounce 2.2s infinite, wiggle 3s infinite",
                 }}
               >
                 ⭐
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "12px",
+                  right: "20px",
+                  fontSize: "1.3rem",
+                  animation: "wiggle 2.8s infinite, rainbow 4s infinite",
+                }}
+              >
+                🌟
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "5px",
+                  fontSize: "0.8rem",
+                  animation: "float 3s infinite, sparkle 2s infinite",
+                }}
+              >
+                🎀
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: "60%",
+                  right: "8px",
+                  fontSize: "0.9rem",
+                  animation: "partyTime 2.5s infinite, superBounce 3.2s infinite",
+                }}
+              >
+                💖
               </div>
               
               <div style={{ fontSize: "1rem", color: "white", marginBottom: "4px", fontWeight: "600" }}>
