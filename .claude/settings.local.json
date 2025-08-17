@@ -6,7 +6,8 @@
       "Bash(npm view:*)",
       "Bash(mkdir:*)",
       "WebSearch",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []
