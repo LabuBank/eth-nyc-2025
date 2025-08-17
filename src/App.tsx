@@ -6,6 +6,8 @@ import {
   generateSessionToken,
   formatAddressesForToken,
 } from "./util/sessionTokenApi";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function LabubankModel() {
   const { scene } = useGLTF("/model.glb");
@@ -25,6 +27,12 @@ interface PortfolioData {
   portfolio_data: any;
 }
 
+interface CachedPortfolio {
+  data: PortfolioData;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
 function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -34,6 +42,32 @@ function App() {
     null
   );
   const [isPortfolioLoading, setIsPortfolioLoading] = useState(false);
+
+  // Portfolio cache - in a real app, you might want to use localStorage or a more robust caching solution
+  const portfolioCache = new Map<string, CachedPortfolio>();
+  const CACHE_TTL = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+
+  const getCachedPortfolio = (walletAddress: string): PortfolioData | null => {
+    const cached = portfolioCache.get(walletAddress);
+    if (!cached) return null;
+
+    const now = Date.now();
+    if (now - cached.timestamp > cached.ttl) {
+      // Cache expired, remove it
+      portfolioCache.delete(walletAddress);
+      return null;
+    }
+
+    return cached.data;
+  };
+
+  const setCachedPortfolio = (walletAddress: string, data: PortfolioData) => {
+    portfolioCache.set(walletAddress, {
+      data,
+      timestamp: Date.now(),
+      ttl: CACHE_TTL,
+    });
+  };
 
   useEffect(() => {
     // Extract Ethereum address from URL path
@@ -49,6 +83,25 @@ function App() {
   }, []);
 
   const fetchPortfolioData = async (walletAddress: string) => {
+    // Check cache first
+    const cachedData = getCachedPortfolio(walletAddress);
+    if (cachedData) {
+      console.log("📋 Using cached portfolio data for wallet:", walletAddress);
+      setPortfolioData(cachedData);
+
+      // Set the initial message with cached portfolio summary
+      if (cachedData.summary) {
+        const portfolioMessage: Message = {
+          id: Date.now().toString(),
+          text: `📊 Portfolio Summary (cached): ${cachedData.summary}`,
+          sender: "ai",
+          timestamp: new Date(),
+        };
+        setMessages([portfolioMessage]);
+      }
+      return;
+    }
+
     setIsPortfolioLoading(true);
     try {
       console.log("📤 Fetching portfolio data for wallet:", walletAddress);
@@ -68,6 +121,9 @@ function App() {
         const data = await response.json();
         console.log("✅ Portfolio response received:", data);
         setPortfolioData(data);
+
+        // Cache the portfolio data
+        setCachedPortfolio(walletAddress, data);
 
         // Set the initial message with portfolio summary
         if (data.summary) {
@@ -379,7 +435,7 @@ function App() {
             padding: "20px",
             boxShadow: "0 10px 30px rgba(179, 128, 121, 0.15)",
             color: "#B38079",
-            maxHeight: "300px",
+            maxHeight: "400px",
             display: "flex",
             flexDirection: "column",
           }}
@@ -391,7 +447,7 @@ function App() {
               marginBottom: "16px",
             }}
           >
-            Chat with labubank
+            Chat with your Labubank
           </h3>
 
           {/* Messages Container */}
@@ -400,14 +456,15 @@ function App() {
               flex: 1,
               overflowY: "auto",
               marginBottom: "16px",
-              maxHeight: "180px",
+              maxHeight: "280px",
+              padding: "8px 0",
             }}
           >
             {messages.map((message) => (
               <div
                 key={message.id}
                 style={{
-                  marginBottom: "12px",
+                  marginBottom: "16px",
                   display: "flex",
                   justifyContent:
                     message.sender === "user" ? "flex-end" : "flex-start",
@@ -415,8 +472,9 @@ function App() {
               >
                 <div
                   style={{
-                    maxWidth: "80%",
-                    padding: "10px 14px",
+                    maxWidth: message.sender === "user" ? "80%" : "90%",
+                    padding:
+                      message.sender === "user" ? "10px 14px" : "16px 20px",
                     borderRadius: "18px",
                     backgroundColor:
                       message.sender === "user"
@@ -424,10 +482,141 @@ function App() {
                         : "rgba(227, 194, 214, 0.8)",
                     color: message.sender === "user" ? "white" : "#B38079",
                     fontSize: "14px",
-                    lineHeight: "1.4",
+                    lineHeight: "1.6",
+                    textAlign: message.sender === "user" ? "left" : "left",
+                    overflowWrap: "break-word",
+                    wordWrap: "break-word",
+                    whiteSpace: "pre-wrap",
+                    boxShadow:
+                      message.sender === "user"
+                        ? "0 2px 8px rgba(145, 191, 223, 0.3)"
+                        : "0 2px 8px rgba(227, 194, 214, 0.3)",
                   }}
                 >
-                  {message.text}
+                  {message.sender === "user" ? (
+                    message.text
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <p style={{ margin: "8px 0", lineHeight: "1.6" }}>
+                            {children}
+                          </p>
+                        ),
+                        ul: ({ children }) => (
+                          <ul style={{ margin: "8px 0", paddingLeft: "20px" }}>
+                            {children}
+                          </ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol style={{ margin: "8px 0", paddingLeft: "20px" }}>
+                            {children}
+                          </ol>
+                        ),
+                        li: ({ children }) => (
+                          <li style={{ margin: "4px 0", lineHeight: "1.5" }}>
+                            {children}
+                          </li>
+                        ),
+                        h1: ({ children }) => (
+                          <h1
+                            style={{
+                              fontSize: "1.4em",
+                              margin: "12px 0 8px 0",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {children}
+                          </h1>
+                        ),
+                        h2: ({ children }) => (
+                          <h2
+                            style={{
+                              fontSize: "1.3em",
+                              margin: "12px 0 8px 0",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {children}
+                          </h2>
+                        ),
+                        h3: ({ children }) => (
+                          <h3
+                            style={{
+                              fontSize: "1.2em",
+                              margin: "10px 0 6px 0",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {children}
+                          </h3>
+                        ),
+                        h4: ({ children }) => (
+                          <h4
+                            style={{
+                              fontSize: "1.1em",
+                              margin: "8px 0 4px 0",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            {children}
+                          </h4>
+                        ),
+                        strong: ({ children }) => (
+                          <strong
+                            style={{ fontWeight: "bold", color: "#8B5A8B" }}
+                          >
+                            {children}
+                          </strong>
+                        ),
+                        em: ({ children }) => (
+                          <em style={{ fontStyle: "italic" }}>{children}</em>
+                        ),
+                        code: ({ children }) => (
+                          <code
+                            style={{
+                              backgroundColor: "rgba(255, 255, 255, 0.15)",
+                              padding: "2px 6px",
+                              borderRadius: "4px",
+                              fontSize: "0.9em",
+                              fontFamily: "monospace",
+                              color: "#8B5A8B",
+                            }}
+                          >
+                            {children}
+                          </code>
+                        ),
+                        blockquote: ({ children }) => (
+                          <blockquote
+                            style={{
+                              borderLeft: "4px solid #B38079",
+                              paddingLeft: "12px",
+                              margin: "12px 0",
+                              color: "#B38079",
+                              fontStyle: "italic",
+                              backgroundColor: "rgba(255, 255, 255, 0.1)",
+                              borderRadius: "4px",
+                              padding: "8px 12px",
+                            }}
+                          >
+                            {children}
+                          </blockquote>
+                        ),
+                        hr: () => (
+                          <hr
+                            style={{
+                              border: "none",
+                              borderTop: "1px solid rgba(179, 128, 121, 0.3)",
+                              margin: "16px 0",
+                            }}
+                          />
+                        ),
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </div>
             ))}
@@ -435,13 +624,17 @@ function App() {
               <div style={{ display: "flex", justifyContent: "flex-start" }}>
                 <div
                   style={{
-                    padding: "10px 14px",
+                    padding: "16px 20px",
                     borderRadius: "18px",
                     backgroundColor: "rgba(227, 194, 214, 0.6)",
                     color: "#B38079",
                     fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
                   }}
                 >
+                  <span style={{ fontSize: "16px" }}>⏳</span>
                   labubank is thinking...
                 </div>
               </div>
