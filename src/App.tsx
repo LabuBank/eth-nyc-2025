@@ -230,8 +230,18 @@ function App() {
       });
 
       setTransactionHash(txHash);
-      setShowSuccessModal(true);
-      setShowNameModal(false);
+      
+      // Handle completion differently based on whether we're in onboarding or main page
+      if (showOnboarding) {
+        // In onboarding flow - set completion state and move to next step
+        setCompletedNftName(newName.trim());
+        setIsNamingComplete(true);
+      } else {
+        // In main page flow - show success modal
+        setShowSuccessModal(true);
+        setShowNameModal(false);
+      }
+      
       setNewName("");
       // Refresh NFT name after transaction is mined (with retries)
       if (labubankAddress) {
@@ -683,12 +693,11 @@ function App() {
                     <button
                       className="button-tap mobile-button"
                       onClick={() => {
-                        if (newName.trim()) {
-                          setCompletedNftName(newName.trim());
-                          setIsNamingComplete(true);
+                        if (newName.trim() && labubankAddress) {
+                          handleNameLabubank();
                         }
                       }}
-                      disabled={!newName.trim()}
+                      disabled={isNaming || !newName.trim() || !labubankAddress}
                       style={{
                         background: "linear-gradient(135deg, #E3C2D6, #91BFDF)",
                         color: "white",
@@ -697,18 +706,18 @@ function App() {
                         borderRadius: "18px",
                         fontSize: "1rem",
                         border: "none",
-                        cursor: !newName.trim() ? "not-allowed" : "pointer",
-                        opacity: !newName.trim() ? 0.5 : 1,
+                        cursor: isNaming || !newName.trim() || !labubankAddress ? "not-allowed" : "pointer",
+                        opacity: isNaming || !newName.trim() || !labubankAddress ? 0.5 : 1,
                         transition: "all 0.3s ease",
                         boxShadow: "0 6px 20px rgba(0, 0, 0, 0.2)",
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
                         minWidth: "180px",
-                        animation: newName.trim() ? "pulse 2s infinite" : "none",
+                        animation: newName.trim() && !isNaming ? "pulse 2s infinite" : "none",
                       }}
                       onMouseOver={(e) => {
-                        if (newName.trim()) {
+                        if (newName.trim() && !isNaming && labubankAddress) {
                           e.currentTarget.style.transform = "translateY(-3px) scale(1.05)";
                           e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.3)";
                         }
@@ -718,7 +727,14 @@ function App() {
                         e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.2)";
                       }}
                     >
-                      ✨ Name My LabuBank
+                      {isNaming ? (
+                        <>
+                          <LoadingSpinner />
+                          Naming...
+                        </>
+                      ) : (
+                        "✨ Name My LabuBank"
+                      )}
                     </button>
                   </div>
                 </div>
