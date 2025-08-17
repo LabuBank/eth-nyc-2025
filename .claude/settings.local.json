@@ -4,7 +4,9 @@
       "Bash(npm start)",
       "Bash(npm install:*)",
       "Bash(npm view:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
