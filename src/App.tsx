@@ -457,17 +457,19 @@ function App() {
     >
       {/* Header */}
       <header style={{ padding: "16px", textAlign: "center" }}>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: "bold",
-            marginBottom: "8px",
-            color: "#B38079",
-          }}
-        >
-          labubank Crypto
-        </h1>
-        <p style={{ fontSize: "1.2rem", opacity: 0.8, color: "#B38079" }}>
+        <div style={{ marginBottom: "16px" }}>
+          <img 
+            src="/labuBankLogoCropped.jpg" 
+            alt="LabuBank Logo" 
+            style={{
+              height: "80px",
+              width: "auto",
+              borderRadius: "12px",
+              boxShadow: "0 4px 15px rgba(179, 128, 121, 0.2)"
+            }}
+          />
+        </div>
+        <p className="labu-header-secondary">
           Your friendly crypto companion
         </p>
       </header>
@@ -591,11 +593,7 @@ function App() {
           }}
         >
           <h3
-            style={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              marginBottom: "16px",
-            }}
+           className="labu-header-tertiary" 
           >
             Chat with your Labubank
           </h3>
@@ -719,20 +717,12 @@ function App() {
           }}
         >
           <h2
-            style={{
-              fontSize: "1.5rem",
-              fontWeight: "bold",
-              marginBottom: "16px",
-            }}
+            className="labu-header-tertiary"
           >
             Welcome to Crypto!
           </h2>
           <p
-            style={{
-              color: "rgba(179, 128, 121, 0.8)",
-              marginBottom: "24px",
-              lineHeight: "1.6",
-            }}
+            className="labu-text"
           >
             Tap your labubank plushie to start your crypto journey. Your digital
             companion will guide you through the world of cryptocurrency.
@@ -796,7 +786,7 @@ function App() {
                 color: "rgba(179, 128, 121, 0.9)",
               }}
             >
-              <span>
+              <span className="labu-text">
                 💡 Click above to buy USDC on Ethereum with your debit card via
                 Coinbase Pay
               </span>
