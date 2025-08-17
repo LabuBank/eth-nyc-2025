@@ -5,6 +5,7 @@ import { getOnrampBuyUrl } from "@coinbase/onchainkit/fund";
 import { createPublicClient, http, encodeFunctionData, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 import PortfolioSection from "./components/PortfolioSection";
+import PyUSDTransferHistory from "./components/PyUSDTransferHistory";
 
 function LabubankModel() {
   const { scene } = useGLTF("/labubank.glb");
@@ -1740,6 +1741,9 @@ function App() {
 
       {/* Portfolio Section - only visible when onboarding is complete */}
       {!showOnboarding && <PortfolioSection walletAddress={labubankAddress} />}
+
+      {/* pyUSD Transfer History - only visible when onboarding is complete */}
+      {!showOnboarding && <PyUSDTransferHistory walletAddress={labubankAddress} />}
 
       {/* labubank Address Display - only visible when onboarding is complete */}
       {!showOnboarding && labubankAddress && (
