@@ -1296,6 +1296,18 @@ function App() {
             labubankAddress={labubankAddress}
           />
 
+          {/* 3D Model */}
+          <Model3D />
+
+          {/* Chat Interface */}
+          <ChatInterface
+            messages={messages}
+            isLoading={isLoading}
+            inputMessage={inputMessage}
+            onInputChange={setInputMessage}
+            onSendMessage={sendMessage}
+          />
+
           {/* Portfolio Section */}
           <PortfolioSection walletAddress={labubankAddress} />
 
@@ -1318,18 +1330,6 @@ function App() {
               Loading your portfolio data...
             </div>
           )}
-
-          {/* 3D Model */}
-          <Model3D />
-
-          {/* Chat Interface */}
-          <ChatInterface
-            messages={messages}
-            isLoading={isLoading}
-            inputMessage={inputMessage}
-            onInputChange={setInputMessage}
-            onSendMessage={sendMessage}
-          />
 
           {/* Welcome Section */}
           <WelcomeSection
